@@ -18,7 +18,7 @@ def driver():
     driver.quit()
 
 def test_login_valid(driver):
-    driver.get("https://maalaxmi.store")
+    driver.get("https://maalaxmi.store/")
 
     # Wait for the "Sign In" button to be clickable
     sign_in_button = WebDriverWait(driver, 10).until(
