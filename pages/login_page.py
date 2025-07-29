@@ -36,3 +36,12 @@ class LoginPage:
                 "button[type='submit'].w-full.bg-gradient-to-r.from-blue-600.to-blue-700"))
         )
         login_button.click()
+        
+    def is_login_successful(self):
+        try:
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//button[contains(text(),'Buttonphone')]"))
+            )
+            return True
+        except:
+            return False
