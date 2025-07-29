@@ -9,6 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
+
 
 @pytest.fixture
 def driver():
@@ -21,12 +23,22 @@ def test_login_valid(driver):
 
     wait = WebDriverWait(driver, 10)
 
-    # Wait and hover the "Sign In" button using ActionChains
+
+    # Wait until element is ready for interaction
     sign_in_button = wait.until(
-        EC.element_to_be_clickable((By.XPATH, "//span[@class='text-sm font-medium' and text()='Sign In']"))
+        EC.presence_of_element_located((By.XPATH, "//span[@class='text-sm font-medium' and text()='Sign In']"))
     )
-    from selenium.webdriver.common.action_chains import ActionChains
-    ActionChains(driver).move_to_element(sign_in_button).perform()
+
+    # Hover action
+    hover = ActionChains(driver).move_to_element(sign_in_button)
+    hover.perform()
+    print("✅ Hovered over the 'Sign In' button")
+
+    # Wait and click the "Login" button using button text
+    login_button = wait.until(
+        EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Login']"))
+    )
+    login_button.click()                           
 
     # Wait for the email input field
     email_input = wait.until(
