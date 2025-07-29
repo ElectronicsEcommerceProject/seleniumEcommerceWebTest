@@ -55,10 +55,10 @@ def test_login_valid(driver):
     except TimeoutException:
         pytest.fail("❌ Password input field not found on the page.")
 
-    # Wait and click the Login button using its full class attributes
+    # Wait and click the Login button using its correct class attributes
     login_button = wait.until(
         EC.element_to_be_clickable((By.CSS_SELECTOR,
-            "button.w-full.bg-blue-600.text-white.py-2.rounded-md.text-sm.font-medium.hover\\:bg-blue-700.transition-all.px-4"))
+            "button[type='submit'].w-full.bg-gradient-to-r.from-blue-600.to-blue-700"))
     )
     login_button.click()
 
