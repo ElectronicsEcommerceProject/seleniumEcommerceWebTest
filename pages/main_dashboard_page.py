@@ -2,6 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+
 
 
 class MainDashboardPage:
@@ -34,3 +36,13 @@ class MainDashboardPage:
             return True
         except:
             return False
+
+    def apply_brand_filter(self):
+        """Scrolls to and clicks the brand filter button using ActionChains."""
+        brand_filter_button = self.wait.until(
+            EC.element_to_be_clickable((By.XPATH, "//*[@id='root']/div/div[4]/div/div[1]/button[4]"))
+        )
+
+        # Move to the element using ActionChains
+        actions = ActionChains(self.driver)
+        actions.move_to_element(brand_filter_button).click().perform()
