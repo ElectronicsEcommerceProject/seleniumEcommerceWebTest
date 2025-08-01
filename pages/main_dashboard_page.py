@@ -11,35 +11,35 @@ class MainDashboardPage:
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
 
-    def is_on_dashboard(self):
+    def is_on_dashboard(self, dashboard_xpath):
         try:
             self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "//button[contains(text(),'Buttonphone')]"))
+                EC.presence_of_element_located((By.XPATH, dashboard_xpath))
             )
             return True
         except:
             return False
     
-    def search_product(self, search_term):
+    def search_product(self, search_term, search_box_selector):
         search_box = self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[placeholder='Search for products...']"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, search_box_selector))
         )
         search_box.clear()
         search_box.send_keys(search_term)
         search_box.send_keys(Keys.ENTER)
         
-    def get_search_results(self):
+    def get_search_results(self, results_selector):
         try:
             self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "[class*='product'], [class*='item'], [class*='card']"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, results_selector))
             )
             return True
         except:
             return False
     
-    def clear_search(self):
+    def clear_search(self, search_box_selector):
         search_box = self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[placeholder='Search for products...']"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, search_box_selector))
         )
         search_box.click()
         search_box.clear()
@@ -47,28 +47,27 @@ class MainDashboardPage:
         search_box.send_keys(Keys.DELETE)
         return search_box.get_attribute("value") == ""
 
-    def apply_brand_filter(self):
+    def apply_brand_filter(self, filter_xpath):
         """Scrolls to and clicks the brand filter button using ActionChains."""
         brand_filter_button = self.wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//*[@id='root']/div/div[4]/div/div[1]/button[4]"))
+            EC.element_to_be_clickable((By.XPATH, filter_xpath))
         )
 
         # Move to the element using ActionChains
         actions = ActionChains(self.driver)
         actions.move_to_element(brand_filter_button).click().perform()
     
-    def count_products_by_brand(self, brand_name):
+    def count_products_by_brand(self, brand_xpath, wait_xpath=None):
         """Count products with specific brand filter."""
         try:
             # Wait for brand elements to be present
-            self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50')]")
-            ))
+            if wait_xpath:
+                self.wait.until(
+                    EC.presence_of_element_located((By.XPATH, wait_xpath))
+                )
             
-            # Find elements with more flexible matching
-            brand_elements = self.driver.find_elements(
-                By.XPATH, f"//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50') and contains(text(), '{brand_name}')]"
-            )
+            # Find elements using provided xpath
+            brand_elements = self.driver.find_elements(By.XPATH, brand_xpath)
             return len(brand_elements)
         except:
             return 0
