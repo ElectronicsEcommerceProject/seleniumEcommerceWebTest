@@ -63,6 +63,5 @@ def test_dashboard_navigation(driver):
     product_count = dashboard_page.count_products_by_brand(brand_xpath, wait_xpath)
     print(f"📊 Found {product_count} Vivo products")
     
-    time.sleep(240)
     
     
