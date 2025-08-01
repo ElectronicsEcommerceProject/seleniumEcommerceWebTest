@@ -56,3 +56,19 @@ class MainDashboardPage:
         # Move to the element using ActionChains
         actions = ActionChains(self.driver)
         actions.move_to_element(brand_filter_button).click().perform()
+    
+    def count_products_by_brand(self, brand_name):
+        """Count products with specific brand filter."""
+        try:
+            # Wait for brand elements to be present
+            self.wait.until(
+                EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50')]")
+            ))
+            
+            # Find elements with more flexible matching
+            brand_elements = self.driver.find_elements(
+                By.XPATH, f"//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50') and contains(text(), '{brand_name}')]"
+            )
+            return len(brand_elements)
+        except:
+            return 0

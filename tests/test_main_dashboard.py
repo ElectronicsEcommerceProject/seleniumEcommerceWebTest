@@ -53,4 +53,8 @@ def test_dashboard_navigation(driver):
     
     dashboard_page.apply_brand_filter()
     print("✅ Brand filter applied successfully!")
-    time.sleep(240)
+    
+    product_count = dashboard_page.count_products_by_brand("Vivo")
+    print(f"📊 Found {product_count}  products")
+    
+    
