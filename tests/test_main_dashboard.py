@@ -38,13 +38,19 @@ def test_dashboard_navigation(driver):
     assert dashboard_page.is_on_dashboard(), "Failed to navigate to the main dashboard"
     print("✅ Successfully on the main dashboard!")
     
-    # print("🔍 Searching for products...")
-    # dashboard_page.search_product("samsung")
-    # print("⏳ Verifying search results...")
-    # assert dashboard_page.get_search_results(), "Search results not found"
-    # print("✅ Search results displayed successfully!")
+    print("🔍 Searching for products...")
+    dashboard_page.search_product("samsung")
+    print("⏳ Verifying search results...")
+    assert dashboard_page.get_search_results(), "Search results not found"
+    print("✅ Search results displayed successfully!")
+    
+    is_cleared = dashboard_page.clear_search()
+    if is_cleared:
+        print("✅ Search box cleared successfully!")
+    else:
+        print("❌ Search box not cleared properly")
+        return 
+    
     dashboard_page.apply_brand_filter()
     print("✅ Brand filter applied successfully!")
     time.sleep(240)
-
-

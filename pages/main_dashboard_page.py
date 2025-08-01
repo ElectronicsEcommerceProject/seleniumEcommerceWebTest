@@ -36,6 +36,16 @@ class MainDashboardPage:
             return True
         except:
             return False
+    
+    def clear_search(self):
+        search_box = self.wait.until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[placeholder='Search for products...']"))
+        )
+        search_box.click()
+        search_box.clear()
+        search_box.send_keys(Keys.CONTROL + "a")
+        search_box.send_keys(Keys.DELETE)
+        return search_box.get_attribute("value") == ""
 
     def apply_brand_filter(self):
         """Scrolls to and clicks the brand filter button using ActionChains."""
