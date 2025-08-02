@@ -100,4 +100,18 @@ class MainDashboardPage:
             return len(images)
         except:
             return 0
+    
+    def click_button_by_text(self, button_text):
+        """Click any button with specified text."""
+        try:
+            button = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, f"//button[contains(text(), '{button_text}')]"))
+            )
+            
+            # Scroll to the button and click
+            actions = ActionChains(self.driver)
+            actions.move_to_element(button).click().perform()
+            return True
+        except:
+            return False
 
