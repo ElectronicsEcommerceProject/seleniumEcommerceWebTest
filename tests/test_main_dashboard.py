@@ -74,6 +74,12 @@ def test_dashboard_navigation(driver):
     print("🔄 Clicking Load More button...")
     if dashboard_page.click_button_by_text("Load More"):
         print("✅ Load More button clicked successfully!")
+
+        print("🖼️ Finding images with specific URL pattern...")
+        url_pattern = "http://maalaxmi.store/uploads/product_images/media_file"
+        image_count = dashboard_page.find_images_with_url_pattern(url_pattern)
+        print(f"📊 Found {image_count} images with pattern: {url_pattern}")
+
     else:
         print("❌ Load More button not found or not clickable")
     
