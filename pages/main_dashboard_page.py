@@ -71,3 +71,33 @@ class MainDashboardPage:
             return len(brand_elements)
         except:
             return 0
+    
+    def refresh_page(self):
+        """Refresh the current page."""
+        self.driver.refresh()
+    
+    def find_images_with_url_pattern(self, url_pattern):
+        """Find all images that contain the specified URL pattern."""
+        try:
+            # Wait for images to load
+            self.wait.until(
+                EC.presence_of_element_located((By.TAG_NAME, "img"))
+            )
+            
+            # Find all images with the specified URL pattern
+            # Scroll down to load all images
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            import time
+            time.sleep(2)
+            
+            # Scroll back to top
+            self.driver.execute_script("window.scrollTo(0, 0);")
+            time.sleep(1)
+            
+            # Find all images with the specified URL pattern
+            images = self.driver.find_elements(By.XPATH, f"//img[contains(@src, '{url_pattern}')]")
+            print(f"Found {len(images)} images with pattern: {url_pattern}")            
+            return len(images)
+        except:
+            return 0
+

@@ -62,6 +62,17 @@ def test_dashboard_navigation(driver):
     wait_xpath = "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50')]"
     product_count = dashboard_page.count_products_by_brand(brand_xpath, wait_xpath)
     print(f"📊 Found {product_count} Vivo products")
+
+    print("🔄 Refreshing page...")
+    dashboard_page.refresh_page()
+    
+    print("🖼️ Finding images with specific URL pattern...")
+    url_pattern = "http://maalaxmi.store/uploads/product_images/media_file"
+    image_count = dashboard_page.find_images_with_url_pattern(url_pattern)
+    print(f"📊 Found {image_count} images with pattern: {url_pattern}")
+
+    
+
     
     
     
