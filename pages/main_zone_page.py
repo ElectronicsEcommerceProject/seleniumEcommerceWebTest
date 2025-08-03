@@ -52,3 +52,15 @@ class MainZonePage:
         except Exception as e:
             print(f"Error checking brand checkboxes: {e}")
             return None
+
+    def search_brand_name(self, brand_name, search_box_xpath):
+        try:
+            search_box = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, search_box_xpath))
+            )
+            search_box.clear()
+            search_box.send_keys(brand_name)
+            return True
+        except Exception as e:
+            print(f"Error searching for brand: {e}")
+            return False
