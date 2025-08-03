@@ -25,3 +25,30 @@ class MainZonePage:
             return True
         except:
             return False
+    
+    def check_brand_checkboxes(self, labels_xpath):
+        """Check which brand checkboxes are checked and unchecked. Accepts XPath for labels as argument."""
+        try:
+            labels = self.driver.find_elements(By.XPATH, labels_xpath)
+            checked_brands = []
+            unchecked_brands = []
+            for label in labels:
+                checkbox = label.find_element(By.XPATH, ".//input[@type='checkbox']")
+                brand_name = label.text.strip()
+                if checkbox.is_selected():
+                    checked_brands.append(brand_name)
+                    print(f"✅ {brand_name} is checked")
+                else:
+                    unchecked_brands.append(brand_name)
+                    print(f"❌ {brand_name} is not checked")
+            print(f"\n📊 Total brands: {len(labels)}")
+            print(f"✅ Checked brands: {len(checked_brands)}")
+            print(f"❌ Unchecked brands: {len(unchecked_brands)}")
+            return {
+                'checked': checked_brands,
+                'unchecked': unchecked_brands,
+                'total': len(labels)
+            }
+        except Exception as e:
+            print(f"Error checking brand checkboxes: {e}")
+            return None

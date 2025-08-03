@@ -46,4 +46,8 @@ def test_main_zone(driver):
         print("✅ Successfully on the main zone!")
     else:
         print("❌ Failed to navigate to the main zone")
-        return 
+        return
+    
+    print("🔍 Checking brand checkboxes...")
+    labels_xpath = "//div[contains(@class, 'max-h-40') and contains(@class, 'overflow-y-auto') and contains(@class, 'custom-scrollbar')]//label[input[@type='checkbox']]"
+    zone_page.check_brand_checkboxes(labels_xpath)
