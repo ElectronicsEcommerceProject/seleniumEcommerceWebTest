@@ -1,0 +1,6 @@
+1.Now work on is the brand search box working properly 
+if you search the wrong brand it should not show that brand 
+
+
+2.Now work on the product search box working properly 
+if you search the wrong product it should not show the product
