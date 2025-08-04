@@ -37,3 +37,48 @@ class BuyNowPage:
                 return True
             except:
                 return False
+    
+    def get_product_details(self, details_xpath):
+        """Extract and print product details like price, SKU, etc."""
+        try:
+            details_container = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, details_xpath))
+            )
+            
+            # Find all key-value pairs
+            detail_rows = details_container.find_elements(By.XPATH, ".//div[contains(@class, 'flex') and contains(@class, 'justify-between')]")
+            
+            print("\n📋 Product Details:")
+            for row in detail_rows:
+                try:
+                    spans = row.find_elements(By.TAG_NAME, "span")
+                    if len(spans) >= 2:
+                        key = spans[0].text.strip()
+                        value = spans[1].text.strip()
+                        print(f"  {key} {value}")
+                except:
+                    continue
+            
+            return True
+        except Exception as e:
+            print(f"Error getting product details: {e}")
+            return False
+    
+    def get_quantity_info(self, quantity_input_xpath):
+        """Get quantity information from the number input field."""
+        try:
+            quantity_input = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, quantity_input_xpath))
+            )
+            
+            min_quantity = quantity_input.get_attribute("min")
+            current_value = quantity_input.get_attribute("value")
+            
+            print(f"\n🔢 Quantity Information:")
+            print(f"  Min quantity to order: {min_quantity}")
+            print(f"  Current quantity: {current_value}")
+            
+            return True
+        except Exception as e:
+            print(f"Error getting quantity info: {e}")
+            return False

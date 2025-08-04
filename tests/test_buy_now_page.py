@@ -38,6 +38,20 @@ def test_buy_now_page(driver):
     if buy_now_page.click_on_product(product_xpath):
         print("✅ Product clicked successfully!")
         
+        print("📋 Getting product details...")
+        details_xpath = "//div[contains(@class, 'mt-3') and contains(@class, 'p-3') and contains(@class, 'bg-gray-50')]"
+        if buy_now_page.get_product_details(details_xpath):
+            print("✅ Product details retrieved successfully!")
+        else:
+            print("❌ Failed to get product details")
+        
+        print("🔢 Getting quantity information...")
+        quantity_input_xpath = "//input[@type='number' and contains(@class, 'w-16')]"
+        if buy_now_page.get_quantity_info(quantity_input_xpath):
+            print("✅ Quantity information retrieved successfully!")
+        else:
+            print("❌ Failed to get quantity information")
+        
     else:
         print("❌ Failed to click on product")
         return
