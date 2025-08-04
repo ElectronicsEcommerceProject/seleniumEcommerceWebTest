@@ -50,8 +50,10 @@ def test_buy_now_page(driver):
         
     print("🔢 Getting quantity information...")
     quantity_input_xpath = "//input[@type='number' and contains(@class, 'w-16')]"
-    if buy_now_page.get_quantity_info(quantity_input_xpath):
+    min_quantity = buy_now_page.get_quantity_info(quantity_input_xpath)
+    if min_quantity:
             print("✅ Quantity information retrieved successfully!")
+            print(f"📊 Using min_quantity value: {min_quantity}")
     else:
             print("❌ Failed to get quantity information")
             return
@@ -63,8 +65,8 @@ def test_buy_now_page(driver):
             
         print("✏️ Entering custom quantity...")
         input_xpath = "//input[@type='number' and @placeholder='Enter quantity']"
-        if buy_now_page.get_input(input_xpath, 5):
-            print("✅ Custom quantity entered successfully! 5")
+        if buy_now_page.get_input(input_xpath, min_quantity+1):
+            print(f"✅ Custom quantity entered successfully! {min_quantity+1}")
         else:
             print("❌ Failed to enter custom quantity")
             return
@@ -72,5 +74,10 @@ def test_buy_now_page(driver):
     else:
         print("❌ Failed to click Set Custom Quantity button")
         return
-    
+    print("⚙️ Clicking Set button...")
+    set_button_xpath = "//button[contains(text(), 'Set')]"
+    if buy_now_page.click_button(set_button_xpath):
+        print(f"✅ Set button clicked successfully! and updated quantity becomes {min_quantity+1}")
+    else:
+        print("❌ Failed to click Set button") 
     

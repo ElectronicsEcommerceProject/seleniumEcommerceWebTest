@@ -78,10 +78,10 @@ class BuyNowPage:
             print(f"  Min quantity to order: {min_quantity}")
             print(f"  Current quantity: {current_value}")
             
-            return True
+            return int(min_quantity) if min_quantity else None
         except Exception as e:
             print(f"Error getting quantity info: {e}")
-            return False
+            return None
     
     def click_button(self, button_xpath):
         """Click on a button based on provided xpath."""
