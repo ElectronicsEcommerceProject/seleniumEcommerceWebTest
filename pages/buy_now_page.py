@@ -82,3 +82,44 @@ class BuyNowPage:
         except Exception as e:
             print(f"Error getting quantity info: {e}")
             return False
+    
+    def click_button(self, button_xpath):
+        """Click on a button based on provided xpath."""
+        try:
+            button_element = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, button_xpath))
+            )
+            
+            # Scroll to the button
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", button_element)
+            time.sleep(1)
+            
+            # Click the button
+            self.driver.execute_script("arguments[0].click();", button_element)
+            print(f"Button clicked successfully")
+            
+            return True
+        except Exception as e:
+            print(f"Error clicking button: {e}")
+            return False
+    
+    def get_input(self, input_xpath, quantity_value):
+        """Enter value into an input field based on provided xpath."""
+        try:
+            input_element = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, input_xpath))
+            )
+            
+            # Scroll to the input
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", input_element)
+            time.sleep(1)
+            
+            # Clear and enter value
+            input_element.clear()
+            input_element.send_keys(str(quantity_value))
+            print(f"Entered value '{quantity_value}' into input field")
+            
+            return True
+        except Exception as e:
+            print(f"Error entering value into input: {e}")
+            return False

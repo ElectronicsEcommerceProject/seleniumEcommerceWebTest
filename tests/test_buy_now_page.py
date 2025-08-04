@@ -37,22 +37,40 @@ def test_buy_now_page(driver):
     product_xpath = "//h3[contains(text(), 'Redbon fast charger')]"
     if buy_now_page.click_on_product(product_xpath):
         print("✅ Product clicked successfully!")
-        
-        print("📋 Getting product details...")
-        details_xpath = "//div[contains(@class, 'mt-3') and contains(@class, 'p-3') and contains(@class, 'bg-gray-50')]"
-        if buy_now_page.get_product_details(details_xpath):
-            print("✅ Product details retrieved successfully!")
-        else:
-            print("❌ Failed to get product details")
-        
-        print("🔢 Getting quantity information...")
-        quantity_input_xpath = "//input[@type='number' and contains(@class, 'w-16')]"
-        if buy_now_page.get_quantity_info(quantity_input_xpath):
-            print("✅ Quantity information retrieved successfully!")
-        else:
-            print("❌ Failed to get quantity information")
-        
     else:
         print("❌ Failed to click on product")
         return
+    print("📋 Getting product details...")
+    details_xpath = "//div[contains(@class, 'mt-3') and contains(@class, 'p-3') and contains(@class, 'bg-gray-50')]"
+    if buy_now_page.get_product_details(details_xpath):
+            print("✅ Product details retrieved successfully!")
+    else:
+            print("❌ Failed to get product details")
+            return
+        
+    print("🔢 Getting quantity information...")
+    quantity_input_xpath = "//input[@type='number' and contains(@class, 'w-16')]"
+    if buy_now_page.get_quantity_info(quantity_input_xpath):
+            print("✅ Quantity information retrieved successfully!")
+    else:
+            print("❌ Failed to get quantity information")
+            return
+        
+    print("🔘 Clicking Set Custom Quantity button...")
+    button_xpath = "//button[contains(text(), 'Set Custom Quantity')]"
+    if buy_now_page.click_button(button_xpath):
+        print("✅ Set Custom Quantity button clicked successfully!")
+            
+        print("✏️ Entering custom quantity...")
+        input_xpath = "//input[@type='number' and @placeholder='Enter quantity']"
+        if buy_now_page.get_input(input_xpath, 5):
+            print("✅ Custom quantity entered successfully! 5")
+        else:
+            print("❌ Failed to enter custom quantity")
+            return
+            
+    else:
+        print("❌ Failed to click Set Custom Quantity button")
+        return
+    
     
