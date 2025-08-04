@@ -160,3 +160,61 @@ def test_buy_now_page(driver):
         print("❌ Failed to click Set button") 
         return
     
+    #checking after increase in quantity to quantity_discount_quantity, bulk_discount_quantity the discount applied on price are correct or not
+     # Calculate discount prices
+    if product_price and quantity_discount_percentage and bulk_discount_percentage:
+        price_value = float(product_price.replace('₹', '').replace(',', ''))
+        # Extract numeric price value
+                
+                
+        print(f"\n💰 Actual Price: ₹{price_value:.2f}")
+                
+        if quantity_discount_percentage:
+        # Calculate total price after quantity discount
+            discount_percent = float(quantity_discount_percentage.replace('%', ''))
+            discounted_unit_price = price_value * (1 - discount_percent / 100)
+            total_quantity_discount_price = discounted_unit_price * quantity_discount_quantity
+            # Calculate saved amount for quantity discount
+            actual_total_price_qty = price_value * quantity_discount_quantity
+            quantity_saved_amount = actual_total_price_qty - total_quantity_discount_price
+            print(f"📊 Total price after {quantity_discount_percentage} quantity discount for {quantity_discount_quantity} units: ₹{total_quantity_discount_price:.2f}")
+            print(f"💰 Amount saved with quantity discount: ₹{quantity_saved_amount:.2f} (Original: ₹{actual_total_price_qty:.2f})")
+                
+        # Calculate total price after bulk discount
+        if bulk_discount_percentage:
+            bulk_percent = float(bulk_discount_percentage.replace('%', ''))
+            discounted_bulk_unit_price = price_value * (1 - bulk_percent / 100)
+            total_bulk_discount_price = discounted_bulk_unit_price * bulk_discount_quantity
+            # Calculate saved amount for bulk discount
+            actual_total_price_bulk = price_value * bulk_discount_quantity
+            bulk_saved_amount = actual_total_price_bulk - total_bulk_discount_price
+            print(f"📦 Total price after {bulk_discount_percentage} bulk discount for {bulk_discount_quantity} units: ₹{total_bulk_discount_price:.2f}")
+            print(f"💰 Amount saved with bulk discount: ₹{bulk_saved_amount:.2f} (Original: ₹{actual_total_price_bulk:.2f})")
+            
+            # Compare with web prices
+            print("\n🔍 Comparing calculated prices with web prices...")
+            price_container_xpath = "//div[contains(@class, 'text-right')]//span[contains(@class, 'text-green-600') and contains(@class, 'font-bold')]/parent::*/parent::*"
+            web_price_info = buy_now_page.get_web_price_info(price_container_xpath)
+            
+            if web_price_info:
+                web_discounted = float(web_price_info['discounted_price'].replace('₹', '').replace(',', ''))
+                web_original = float(web_price_info['original_price'].replace('₹', '').replace(',', ''))
+                web_saved = float(web_price_info['savings'].replace('₹', '').replace(',', ''))
+                
+                print(f"🌐 Web discounted price: ₹{web_discounted:.2f}")
+                print(f"🌐 Web original price: ₹{web_original:.2f}")
+                print(f"🌐 Web savings: ₹{web_saved:.2f}")
+                
+                # Compare prices
+                if abs(web_discounted - total_bulk_discount_price) < 0.01:
+                    print("✅ Discounted price matches web price!")
+                else:
+                    print(f"❌ Discounted price mismatch: Calculated ₹{total_bulk_discount_price:.2f} vs Web ₹{web_discounted:.2f}")
+                
+                if abs(web_saved - bulk_saved_amount) < 0.01:
+                    print("✅ Saved amount matches web savings!")
+                else:
+                    print(f"❌ Saved amount mismatch: Calculated ₹{bulk_saved_amount:.2f} vs Web ₹{web_saved:.2f}")
+            else:
+                print("❌ Failed to get web price information for comparison")
+    

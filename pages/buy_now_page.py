@@ -132,3 +132,41 @@ class BuyNowPage:
         except Exception as e:
             print(f"Error entering value into input: {e}")
             return False
+    
+    def get_web_price_info(self, price_container_xpath):
+        """Extract price and savings information from web elements."""
+        try:
+            price_container = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, price_container_xpath))
+            )
+            
+            # Extract discounted price (green text)
+            discounted_price_element = price_container.find_element(By.XPATH, ".//span[contains(@class, 'text-green-600') and contains(@class, 'font-bold')]")
+            web_discounted_price = discounted_price_element.text.strip()
+            
+            # Extract original price (line-through)
+            original_price_element = price_container.find_element(By.XPATH, ".//span[contains(@class, 'line-through')]")
+            web_original_price = original_price_element.text.strip()
+            
+            # Extract savings amount
+            savings_element = price_container.find_element(By.XPATH, ".//span[contains(text(), 'Save')]")
+            web_savings = savings_element.text.strip().replace('Save ', '')
+            
+            return {
+                'discounted_price': web_discounted_price,
+                'original_price': web_original_price,
+                'savings': web_savings
+            }
+        except Exception as e:
+            print(f"Error getting web price info: {e}")
+            return None
+    
+    def get_current_quantity(self, quantity_input_xpath):
+        """Get the current quantity value from the input field."""
+        try:
+            quantity_input = self.driver.find_element(By.XPATH, quantity_input_xpath)
+            current_qty = quantity_input.get_attribute("value")
+            return int(current_qty) if current_qty else None
+        except Exception as e:
+            print(f"Error getting current quantity: {e}")
+            return None
