@@ -80,4 +80,38 @@ def test_buy_now_page(driver):
         print(f"✅ Set button clicked successfully! and updated quantity becomes {min_quantity+1}")
     else:
         print("❌ Failed to click Set button") 
+        return
+    
+    #setting quantity to be below the minimum quantity...
+    if buy_now_page.click_button(button_xpath):
+        print("✅ Set Custom Quantity button clicked successfully!")
+            
+        print("✏️ Entering custom quantity...")
+        input_xpath = "//input[@type='number' and @placeholder='Enter quantity']"
+        if buy_now_page.get_input(input_xpath, min_quantity-1):
+            print(f"✅ Custom quantity entered successfully! {min_quantity-1}")
+        else:
+            print("❌ Failed to enter custom quantity")
+            return
+            
+    else:
+        print("❌ Failed to click Set Custom Quantity button")
+        return
+    print("⚙️ Clicking Set button...")
+    set_button_xpath = "//button[contains(text(), 'Set')]"
+    if buy_now_page.click_button(set_button_xpath):
+        print(f"✅ Set button clicked successfully! and updated quantity becomes {min_quantity-1}")
+        # Handle alert
+        try:
+            time.sleep(1)  # Wait for alert to appear
+            alert = driver.switch_to.alert
+            alert_message = alert.text
+            print(f"⚠️ Alert message: {alert_message}")
+            alert.accept()  # Click OK on alert
+            print("✅ Alert accepted")
+        except Exception as e:
+            print(f"❌ No alert found or error handling alert: {e}")
+    else:
+        print("❌ Failed to click Set button") 
+        return
     
