@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from utils.driver_setup import get_driver
 from pages.login_page import LoginPage
 from pages.main_zone_page import MainZonePage
+import time
 
 load_dotenv()
 
@@ -68,4 +69,7 @@ def test_main_zone(driver):
     zone_page.found_brand_names(brand_labels_xpath)
     print("🔍 Counting products on page...")
     url_pattern = "http://maalaxmi.store/uploads/product_images/media_file"
+    zone_page.count_products_on_page(url_pattern)
+    zone_page.search_brand_name("satyamtest", "//input[@placeholder='🔍 Search products (auto-search after 1.5s or press Enter)...']")
+    print("product search applied..")
     zone_page.count_products_on_page(url_pattern)

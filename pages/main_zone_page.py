@@ -100,7 +100,7 @@ class MainZonePage:
             # Find all images with the specified URL pattern
             product_images = self.driver.find_elements(By.XPATH, f"//img[contains(@src, '{url_pattern}')]")
             
-            print(f"📊 Number of products on web page before search applied: {len(product_images)}")
+            print(f"📊 Number of products on web page by search applied: {len(product_images)}")
             
             return len(product_images)
         except Exception as e:
