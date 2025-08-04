@@ -55,3 +55,12 @@ def test_main_zone(driver):
     print("🔍 Finding brand names from search results...")
     brand_labels_xpath = "//div[contains(@class, 'max-h-40') and contains(@class, 'overflow-y-auto') and contains(@class, 'custom-scrollbar')]//label"
     zone_page.found_brand_names(brand_labels_xpath)
+    
+    print("🔍 Searching for a specific brand...")
+    search_box_xpath = "//input[@placeholder='Search brands...']"
+    if zone_page.search_brand_name("mi", search_box_xpath):
+        print("✅ Searched for brand successfully!")
+    else:
+        print("❌ Failed to search for brand")
+        return
+    zone_page.found_brand_names(brand_labels_xpath)
