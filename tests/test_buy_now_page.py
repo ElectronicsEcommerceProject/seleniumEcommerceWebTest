@@ -11,6 +11,15 @@ import time
 
 load_dotenv()
 
+# Global variables to store product details
+product_price = None
+quantity_discount = None
+bulk_discount = None
+quantity_discount_percentage = None
+quantity_discount_quantity = None
+bulk_discount_percentage = None
+bulk_discount_quantity = None
+
 @pytest.fixture
 def driver():
     driver = get_driver()
@@ -42,8 +51,44 @@ def test_buy_now_page(driver):
         return
     print("📋 Getting product details...")
     details_xpath = "//div[contains(@class, 'mt-3') and contains(@class, 'p-3') and contains(@class, 'bg-gray-50')]"
-    if buy_now_page.get_product_details(details_xpath):
+    product_details = buy_now_page.get_product_details(details_xpath)
+    if product_details:
             print("✅ Product details retrieved successfully!")
+            # Store in global variables
+            global product_price, quantity_discount, bulk_discount
+            product_price = product_details.get('price')
+            quantity_discount = product_details.get('quantity_discount')
+            bulk_discount = product_details.get('bulk_discount')
+            
+            # Parse discount details
+            global quantity_discount_percentage, quantity_discount_quantity, bulk_discount_percentage, bulk_discount_quantity
+            
+            if quantity_discount:
+                import re
+                # Extract percentage (e.g., "10.00%")
+                percentage_match = re.search(r'(\d+\.\d+)%', quantity_discount)
+                quantity_discount_percentage = percentage_match.group(1) + '%' if percentage_match else None
+                
+                # Extract quantity (e.g., "2+" becomes 3)
+                quantity_match = re.search(r'(\d+)\+', quantity_discount)
+                quantity_discount_quantity = int(quantity_match.group(1)) + 1 if quantity_match else None
+            
+            if bulk_discount:
+                # Extract percentage (e.g., "25.00%")
+                percentage_match = re.search(r'(\d+\.\d+)%', bulk_discount)
+                bulk_discount_percentage = percentage_match.group(1) + '%' if percentage_match else None
+                
+                # Extract quantity (e.g., "4+" becomes 5)
+                quantity_match = re.search(r'(\d+)\+', bulk_discount)
+                bulk_discount_quantity = int(quantity_match.group(1)) + 1 if quantity_match else None
+            
+            print(f"💰 Price: {product_price}")
+            print(f"📊 Quantity Discount: {quantity_discount}")
+            print(f"📦 Bulk Discount: {bulk_discount}")
+            print(f"📊 Quantity Discount Percentage: {quantity_discount_percentage}")
+            print(f"📊 Quantity Discount Quantity: {quantity_discount_quantity}")
+            print(f"📦 Bulk Discount Percentage: {bulk_discount_percentage}")
+            print(f"📦 Bulk Discount Quantity: {bulk_discount_quantity}")
     else:
             print("❌ Failed to get product details")
             return

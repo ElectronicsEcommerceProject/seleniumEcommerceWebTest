@@ -48,6 +48,7 @@ class BuyNowPage:
             # Find all key-value pairs
             detail_rows = details_container.find_elements(By.XPATH, ".//div[contains(@class, 'flex') and contains(@class, 'justify-between')]")
             
+            product_details = {}
             print("\n📋 Product Details:")
             for row in detail_rows:
                 try:
@@ -56,13 +57,21 @@ class BuyNowPage:
                         key = spans[0].text.strip()
                         value = spans[1].text.strip()
                         print(f"  {key} {value}")
+                        
+                        # Store specific details
+                        if "Price:" in key:
+                            product_details['price'] = value
+                        elif "Quantity Discount:" in key:
+                            product_details['quantity_discount'] = value
+                        elif "Bulk Discount:" in key:
+                            product_details['bulk_discount'] = value
                 except:
                     continue
             
-            return True
+            return product_details
         except Exception as e:
             print(f"Error getting product details: {e}")
-            return False
+            return None
     
     def get_quantity_info(self, quantity_input_xpath):
         """Get quantity information from the number input field."""
