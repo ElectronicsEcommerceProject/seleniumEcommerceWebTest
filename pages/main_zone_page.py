@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
 class MainZonePage:
     def __init__(self, driver):
@@ -52,6 +53,30 @@ class MainZonePage:
         except Exception as e:
             print(f"Error checking brand checkboxes: {e}")
             return None
+    
+    def found_brand_names(self, labels_xpath):
+        """Find and display brand names from search results."""
+        try:
+            # Find all label elements using provided xpath
+            labels = self.driver.find_elements(By.XPATH, labels_xpath)
+            
+            brand_names = []
+            
+            for label in labels:
+                brand_name = label.text.strip()
+                if brand_name:  # Only add non-empty brand names
+                    brand_names.append(brand_name)
+                    print(f"📱 Found brand: {brand_name}")
+            
+            if len(brand_names) == 0:
+                print("📊 Found 0 brands according to search result")
+            else:
+                print(f"📊 Found {len(brand_names)} brands according to search result")
+            
+            return brand_names
+        except Exception as e:
+            print(f"Error finding brand names: {e}")
+            return []
 
     def search_brand_name(self, brand_name, search_box_xpath):
         try:
