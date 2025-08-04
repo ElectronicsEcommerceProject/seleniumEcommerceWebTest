@@ -56,6 +56,8 @@ def test_main_zone(driver):
     brand_labels_xpath = "//div[contains(@class, 'max-h-40') and contains(@class, 'overflow-y-auto') and contains(@class, 'custom-scrollbar')]//label"
     zone_page.found_brand_names(brand_labels_xpath)
     
+    
+    
     print("🔍 Searching for a specific brand...")
     search_box_xpath = "//input[@placeholder='Search brands...']"
     if zone_page.search_brand_name("mi", search_box_xpath):
@@ -64,3 +66,6 @@ def test_main_zone(driver):
         print("❌ Failed to search for brand")
         return
     zone_page.found_brand_names(brand_labels_xpath)
+    print("🔍 Counting products on page...")
+    url_pattern = "http://maalaxmi.store/uploads/product_images/media_file"
+    zone_page.count_products_on_page(url_pattern)

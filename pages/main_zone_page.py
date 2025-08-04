@@ -89,3 +89,20 @@ class MainZonePage:
         except Exception as e:
             print(f"Error searching for brand: {e}")
             return False
+    
+    def count_products_on_page(self, url_pattern):
+        """Count number of products on page based on image URL pattern."""
+        try:
+            # Scroll to load all products
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            
+            # Find all images with the specified URL pattern
+            product_images = self.driver.find_elements(By.XPATH, f"//img[contains(@src, '{url_pattern}')]")
+            
+            print(f"📊 Number of products on web page before search applied: {len(product_images)}")
+            
+            return len(product_images)
+        except Exception as e:
+            print(f"Error counting products: {e}")
+            return 0
