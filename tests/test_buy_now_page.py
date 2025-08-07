@@ -198,12 +198,13 @@ def calculate_and_compare_prices(buy_now_page):
         saved_amount = original_total_price - discounted_total_price
         
         print(f"🏷️ Applied Discount: {discount_type}")
-        print(f"💰 Original Total Price: ₹{original_total_price:.2f}")
-        print(f"💰 Discounted Total Price: ₹{discounted_total_price:.2f}")
-        print(f"💰 Amount Saved: ₹{saved_amount:.2f}")
+        print(f"💰 Calculated for {current_quantity} units:")
+        print(f"  - Original Total Price: ₹{original_total_price:.2f} ({current_quantity} x ₹{price_value:.2f})")
+        print(f"  - Discounted Total Price: ₹{discounted_total_price:.2f} ({current_quantity} x ₹{discounted_unit_price:.2f})")
+        print(f"  - Amount Saved: ₹{saved_amount:.2f}")
         
         # Compare with web prices
-        print("\n🔍 Comparing calculated prices with web prices...")
+        print(f"\n🔍 Comparing calculated prices with web prices (for {current_quantity} units):")
         web_price_info = buy_now_page.get_web_price_info()
         
         if web_price_info:
@@ -211,19 +212,20 @@ def calculate_and_compare_prices(buy_now_page):
             web_original = float(web_price_info['original_price'].replace('₹', '').replace(',', ''))
             web_saved = float(web_price_info['savings'].replace('₹', '').replace(',', ''))
             
-            print(f"🌐 Web discounted price: ₹{web_discounted:.2f}")
-            print(f"🌐 Web original price: ₹{web_original:.2f}")
-            print(f"🌐 Web savings: ₹{web_saved:.2f}")
+            print(f"🌐 Web prices for {current_quantity} units:")
+            print(f"  - Web original price: ₹{web_original:.2f}")
+            print(f"  - Web discounted price: ₹{web_discounted:.2f}")
+            print(f"  - Web savings: ₹{web_saved:.2f}")
             
             if abs(web_discounted - discounted_total_price) < 0.01:
-                print("✅ Discounted price matches web price!")
+                print(f"✅ Discounted price matches web price for {current_quantity} units!")
             else:
-                print(f"❌ Discounted price mismatch: Calculated ₹{discounted_total_price:.2f} vs Web ₹{web_discounted:.2f}")
+                print(f"❌ Discounted price mismatch for {current_quantity} units: Calculated ₹{discounted_total_price:.2f} vs Web ₹{web_discounted:.2f}")
             
             if abs(web_saved - saved_amount) < 0.01:
-                print("✅ Saved amount matches web savings!")
+                print(f"✅ Saved amount matches web savings for {current_quantity} units!")
             else:
-                print(f"❌ Saved amount mismatch: Calculated ₹{saved_amount:.2f} vs Web ₹{web_saved:.2f}")
+                print(f"❌ Saved amount mismatch for {current_quantity} units: Calculated ₹{saved_amount:.2f} vs Web ₹{web_saved:.2f}")
         else:
             print("❌ Failed to get web price information for comparison")
 
@@ -256,15 +258,42 @@ def test_buy_now_page(driver):
     if not set_custom_quantity_below_min(buy_now_page, min_quantity, driver):
         return
     
-    # Set a specific quantity for price comparison (e.g., bulk discount quantity)
-    if bulk_discount_quantity:
-        print(f"\n🔢 Setting quantity to {bulk_discount_quantity} for price comparison...")
-        if buy_now_page.click_button("set_custom_quantity"):
-            if buy_now_page.get_input(bulk_discount_quantity):
-                if buy_now_page.click_button("set"):
-                    print(f"✅ Quantity set to {bulk_discount_quantity} successfully!")
-                    time.sleep(2)  # Wait for price update
+    # Test price calculation with current quantity (after alert, quantity should be back to minimum)
+    print("\n📊 ========== TESTING PRICE CALCULATION ==========\n")
     
-    # Calculate and compare prices
+    # Wait for page to stabilize after alert
+    time.sleep(2)
+    
+    print(f"🔢 Testing with current quantity after alert...")
     calculate_and_compare_prices(buy_now_page)
+    
+    # Try to test quantity discount scenario
+    print(f"\n🔢 Attempting to test quantity discount scenario...")
+    try:
+        # Refresh page to reset state
+        driver.refresh()
+        time.sleep(3)
+        
+        # Set quantity for quantity discount testing
+        if quantity_discount_quantity and buy_now_page.click_button("set_custom_quantity"):
+            if buy_now_page.get_input(quantity_discount_quantity):
+                if buy_now_page.click_button("set"):
+                    print(f"✅ Quantity set to {quantity_discount_quantity} for quantity discount testing!")
+                    time.sleep(2)
+                    calculate_and_compare_prices(buy_now_page)
+                    
+                    # Test bulk discount scenario
+                    print(f"\n🔢 Testing bulk discount scenario...")
+                    if bulk_discount_quantity and buy_now_page.click_button("set_custom_quantity"):
+                        if buy_now_page.get_input(bulk_discount_quantity):
+                            if buy_now_page.click_button("set"):
+                                print(f"✅ Quantity set to {bulk_discount_quantity} for bulk discount testing!")
+                                time.sleep(2)
+                                calculate_and_compare_prices(buy_now_page)
+    except Exception as e:
+        print(f"❌ Error in discount testing: {e}")
+        print("Testing with current quantity as fallback...")
+        calculate_and_compare_prices(buy_now_page)
+    
+    print("\n📊 ========== PRICE TESTING COMPLETE ==========\n")
     
