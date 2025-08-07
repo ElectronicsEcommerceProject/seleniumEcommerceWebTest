@@ -5,18 +5,29 @@ import time
 
 class BuyNowPage:
     """Page object for the Buy Now page."""
-
-
-    def __init__(self, driver):
-            self.driver = driver
-            self.wait = WebDriverWait(driver, 10)
     
-    def click_on_product(self, product_xpath):
-        """Click on a product based on provided xpath."""
+    # Locators
+    PRODUCT_LINK = (By.XPATH, "//h3[contains(text(), 'Redbon fast charger')]")
+    PRODUCT_DETAILS = (By.XPATH, "//div[contains(@class, 'mt-3') and contains(@class, 'p-3') and contains(@class, 'bg-gray-50')]")
+    QUANTITY_INPUT = (By.XPATH, "//input[@type='number' and contains(@class, 'w-16')]")
+    SET_CUSTOM_QUANTITY_BUTTON = (By.XPATH, "//button[contains(text(), 'Set Custom Quantity')]")
+    CUSTOM_QUANTITY_INPUT = (By.XPATH, "//input[@type='number' and @placeholder='Enter quantity']")
+    SET_BUTTON = (By.XPATH, "//button[contains(text(), 'Set')]")
+    PRICE_CONTAINER = (By.XPATH, "//div[contains(@class, 'flex') and contains(@class, 'items-center') and contains(@class, 'space-x-2')]")
+    DISCOUNTED_PRICE = (By.XPATH, ".//span[contains(@class, 'text-green-600') and contains(@class, 'font-bold')]")
+    ORIGINAL_PRICE = (By.XPATH, ".//span[contains(@class, 'line-through')]")
+    SAVINGS_TEXT = (By.XPATH, ".//span[contains(text(), 'Save')]")
+    DETAIL_ROWS = (By.XPATH, ".//div[contains(@class, 'flex') and contains(@class, 'justify-between')]")
+    SPAN_TAGS = (By.TAG_NAME, "span")
+    
+    def __init__(self, driver):
+        self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
+    
+    def click_on_product(self):
+        """Click on a product."""
         try:
-            product_element = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, product_xpath))
-            )
+            product_element = self.wait.until(EC.presence_of_element_located(self.PRODUCT_LINK))
             
             # Scroll to the element
             self.driver.execute_script("arguments[0].scrollIntoView(true);", product_element)
@@ -38,21 +49,19 @@ class BuyNowPage:
             except:
                 return False
     
-    def get_product_details(self, details_xpath):
+    def get_product_details(self):
         """Extract and print product details like price, SKU, etc."""
         try:
-            details_container = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, details_xpath))
-            )
+            details_container = self.wait.until(EC.presence_of_element_located(self.PRODUCT_DETAILS))
             
             # Find all key-value pairs
-            detail_rows = details_container.find_elements(By.XPATH, ".//div[contains(@class, 'flex') and contains(@class, 'justify-between')]")
+            detail_rows = details_container.find_elements(*self.DETAIL_ROWS)
             
             product_details = {}
             print("\n📋 Product Details:")
             for row in detail_rows:
                 try:
-                    spans = row.find_elements(By.TAG_NAME, "span")
+                    spans = row.find_elements(*self.SPAN_TAGS)
                     if len(spans) >= 2:
                         key = spans[0].text.strip()
                         value = spans[1].text.strip()
@@ -73,12 +82,10 @@ class BuyNowPage:
             print(f"Error getting product details: {e}")
             return None
     
-    def get_quantity_info(self, quantity_input_xpath):
+    def get_quantity_info(self):
         """Get quantity information from the number input field."""
         try:
-            quantity_input = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, quantity_input_xpath))
-            )
+            quantity_input = self.wait.until(EC.presence_of_element_located(self.QUANTITY_INPUT))
             
             min_quantity = quantity_input.get_attribute("min")
             current_value = quantity_input.get_attribute("value")
@@ -92,12 +99,15 @@ class BuyNowPage:
             print(f"Error getting quantity info: {e}")
             return None
     
-    def click_button(self, button_xpath):
-        """Click on a button based on provided xpath."""
+    def click_button(self, button_type="set_custom_quantity"):
+        """Click on a button based on button type."""
         try:
-            button_element = self.wait.until(
-                EC.element_to_be_clickable((By.XPATH, button_xpath))
-            )
+            if button_type == "set_custom_quantity":
+                button_element = self.wait.until(EC.element_to_be_clickable(self.SET_CUSTOM_QUANTITY_BUTTON))
+            elif button_type == "set":
+                button_element = self.wait.until(EC.element_to_be_clickable(self.SET_BUTTON))
+            else:
+                raise ValueError(f"Unknown button type: {button_type}")
             
             # Scroll to the button
             self.driver.execute_script("arguments[0].scrollIntoView(true);", button_element)
@@ -112,12 +122,10 @@ class BuyNowPage:
             print(f"Error clicking button: {e}")
             return False
     
-    def get_input(self, input_xpath, quantity_value):
-        """Enter value into an input field based on provided xpath."""
+    def get_input(self, quantity_value):
+        """Enter value into the custom quantity input field."""
         try:
-            input_element = self.wait.until(
-                EC.element_to_be_clickable((By.XPATH, input_xpath))
-            )
+            input_element = self.wait.until(EC.element_to_be_clickable(self.CUSTOM_QUANTITY_INPUT))
             
             # Scroll to the input
             self.driver.execute_script("arguments[0].scrollIntoView(true);", input_element)
@@ -133,23 +141,21 @@ class BuyNowPage:
             print(f"Error entering value into input: {e}")
             return False
     
-    def get_web_price_info(self, price_container_xpath):
+    def get_web_price_info(self):
         """Extract price and savings information from web elements."""
         try:
-            price_container = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, price_container_xpath))
-            )
+            price_container = self.wait.until(EC.presence_of_element_located(self.PRICE_CONTAINER))
             
             # Extract discounted price (green text)
-            discounted_price_element = price_container.find_element(By.XPATH, ".//span[contains(@class, 'text-green-600') and contains(@class, 'font-bold')]")
+            discounted_price_element = price_container.find_element(*self.DISCOUNTED_PRICE)
             web_discounted_price = discounted_price_element.text.strip()
             
             # Extract original price (line-through)
-            original_price_element = price_container.find_element(By.XPATH, ".//span[contains(@class, 'line-through')]")
+            original_price_element = price_container.find_element(*self.ORIGINAL_PRICE)
             web_original_price = original_price_element.text.strip()
             
             # Extract savings amount
-            savings_element = price_container.find_element(By.XPATH, ".//span[contains(text(), 'Save')]")
+            savings_element = price_container.find_element(*self.SAVINGS_TEXT)
             web_savings = savings_element.text.strip().replace('Save ', '')
             
             return {
@@ -161,10 +167,10 @@ class BuyNowPage:
             print(f"Error getting web price info: {e}")
             return None
     
-    def get_current_quantity(self, quantity_input_xpath):
+    def get_current_quantity(self):
         """Get the current quantity value from the input field."""
         try:
-            quantity_input = self.driver.find_element(By.XPATH, quantity_input_xpath)
+            quantity_input = self.driver.find_element(*self.QUANTITY_INPUT)
             current_qty = quantity_input.get_attribute("value")
             return int(current_qty) if current_qty else None
         except Exception as e:
