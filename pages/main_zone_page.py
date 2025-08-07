@@ -4,37 +4,42 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 
 class MainZonePage:
+    # Locators
+    CATEGORY_BUTTON = (By.XPATH, "//button[contains(@class, 'text-xs') and contains(@class, 'md:text-sm') and contains(@class, 'font-medium') and contains(text(), 'Charger')]")
+    ZONE_INDICATOR = (By.XPATH, "//span[normalize-space()='Price -- High to Low']")
+    BRAND_CHECKBOXES = (By.XPATH, "//div[contains(@class, 'max-h-40') and contains(@class, 'overflow-y-auto') and contains(@class, 'custom-scrollbar')]//label[input[@type='checkbox']]")
+    BRAND_LABELS = (By.XPATH, "//div[contains(@class, 'max-h-40') and contains(@class, 'overflow-y-auto') and contains(@class, 'custom-scrollbar')]//label")
+    BRAND_SEARCH_BOX = (By.XPATH, "//input[@placeholder='Search brands...']")
+    PRODUCT_SEARCH_BOX = (By.XPATH, "//input[@placeholder='🔍 Search products (auto-search after 1.5s or press Enter)...']")
+    CHECKBOX_INPUT = (By.XPATH, ".//input[@type='checkbox']")
+    
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
 
-    def clicked_on_category(self, category_xpath):
+    def clicked_on_category(self):
         try:
-            category_button = self.wait.until(
-                EC.element_to_be_clickable((By.XPATH, category_xpath))
-            )
+            category_button = self.wait.until(EC.element_to_be_clickable(self.CATEGORY_BUTTON))
             category_button.click()
             return True
         except:
             return False
 
-    def is_on_zone_page(self, zone_xpath):
+    def is_on_zone_page(self):
         try:
-            self.wait.until(
-                EC.presence_of_element_located((By.XPATH, zone_xpath))
-            )
+            self.wait.until(EC.presence_of_element_located(self.ZONE_INDICATOR))
             return True
         except:
             return False
     
-    def check_brand_checkboxes(self, labels_xpath):
-        """Check which brand checkboxes are checked and unchecked. Accepts XPath for labels as argument."""
+    def check_brand_checkboxes(self):
+        """Check which brand checkboxes are checked and unchecked."""
         try:
-            labels = self.driver.find_elements(By.XPATH, labels_xpath)
+            labels = self.driver.find_elements(*self.BRAND_CHECKBOXES)
             checked_brands = []
             unchecked_brands = []
             for label in labels:
-                checkbox = label.find_element(By.XPATH, ".//input[@type='checkbox']")
+                checkbox = label.find_element(*self.CHECKBOX_INPUT)
                 brand_name = label.text.strip()
                 if checkbox.is_selected():
                     checked_brands.append(brand_name)
@@ -54,11 +59,10 @@ class MainZonePage:
             print(f"Error checking brand checkboxes: {e}")
             return None
     
-    def found_brand_names(self, labels_xpath):
+    def found_brand_names(self):
         """Find and display brand names from search results."""
         try:
-            # Find all label elements using provided xpath
-            labels = self.driver.find_elements(By.XPATH, labels_xpath)
+            labels = self.driver.find_elements(*self.BRAND_LABELS)
             
             brand_names = []
             
@@ -78,11 +82,12 @@ class MainZonePage:
             print(f"Error finding brand names: {e}")
             return []
 
-    def search_brand_name(self, brand_name, search_box_xpath):
+    def search_brand_name(self, brand_name, search_type="brand"):
         try:
-            search_box = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, search_box_xpath))
-            )
+            if search_type == "brand":
+                search_box = self.wait.until(EC.presence_of_element_located(self.BRAND_SEARCH_BOX))
+            else:
+                search_box = self.wait.until(EC.presence_of_element_located(self.PRODUCT_SEARCH_BOX))
             search_box.clear()
             search_box.send_keys(brand_name)
             return True
