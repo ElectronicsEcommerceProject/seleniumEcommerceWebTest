@@ -169,52 +169,63 @@ def set_custom_quantity_below_min(buy_now_page, min_quantity, driver):
 
 def calculate_and_compare_prices(buy_now_page):
     """Calculate discount prices and compare with web prices"""
-    if product_price and quantity_discount_percentage and bulk_discount_percentage:
+    if product_price:
+        # Get current quantity from browser
+        current_quantity = buy_now_page.get_current_quantity()
+        if not current_quantity:
+            print("❌ Failed to get current quantity from browser")
+            return
+            
         price_value = float(product_price.replace('₹', '').replace(',', ''))
-        print(f"\n💰 Actual Price: ₹{price_value:.2f}")
+        print(f"\n💰 Unit Price: ₹{price_value:.2f}")
+        print(f"🔢 Current Quantity in Browser: {current_quantity}")
         
-        if quantity_discount_percentage:
+        # Determine which discount applies based on current quantity
+        discount_percent = 0
+        discount_type = "No discount"
+        
+        if bulk_discount_percentage and current_quantity >= bulk_discount_quantity:
+            discount_percent = float(bulk_discount_percentage.replace('%', ''))
+            discount_type = f"Bulk discount ({bulk_discount_percentage})"
+        elif quantity_discount_percentage and current_quantity >= quantity_discount_quantity:
             discount_percent = float(quantity_discount_percentage.replace('%', ''))
-            discounted_unit_price = price_value * (1 - discount_percent / 100)
-            total_quantity_discount_price = discounted_unit_price * quantity_discount_quantity
-            actual_total_price_qty = price_value * quantity_discount_quantity
-            quantity_saved_amount = actual_total_price_qty - total_quantity_discount_price
-            print(f"📊 Total price after {quantity_discount_percentage} quantity discount for {quantity_discount_quantity} units: ₹{total_quantity_discount_price:.2f}")
-            print(f"💰 Amount saved with quantity discount: ₹{quantity_saved_amount:.2f} (Original: ₹{actual_total_price_qty:.2f})")
+            discount_type = f"Quantity discount ({quantity_discount_percentage})"
         
-        if bulk_discount_percentage:
-            bulk_percent = float(bulk_discount_percentage.replace('%', ''))
-            discounted_bulk_unit_price = price_value * (1 - bulk_percent / 100)
-            total_bulk_discount_price = discounted_bulk_unit_price * bulk_discount_quantity
-            actual_total_price_bulk = price_value * bulk_discount_quantity
-            bulk_saved_amount = actual_total_price_bulk - total_bulk_discount_price
-            print(f"📦 Total price after {bulk_discount_percentage} bulk discount for {bulk_discount_quantity} units: ₹{total_bulk_discount_price:.2f}")
-            print(f"💰 Amount saved with bulk discount: ₹{bulk_saved_amount:.2f} (Original: ₹{actual_total_price_bulk:.2f})")
+        # Calculate prices based on current quantity
+        original_total_price = price_value * current_quantity
+        discounted_unit_price = price_value * (1 - discount_percent / 100)
+        discounted_total_price = discounted_unit_price * current_quantity
+        saved_amount = original_total_price - discounted_total_price
+        
+        print(f"🏷️ Applied Discount: {discount_type}")
+        print(f"💰 Original Total Price: ₹{original_total_price:.2f}")
+        print(f"💰 Discounted Total Price: ₹{discounted_total_price:.2f}")
+        print(f"💰 Amount Saved: ₹{saved_amount:.2f}")
+        
+        # Compare with web prices
+        print("\n🔍 Comparing calculated prices with web prices...")
+        web_price_info = buy_now_page.get_web_price_info()
+        
+        if web_price_info:
+            web_discounted = float(web_price_info['discounted_price'].replace('₹', '').replace(',', ''))
+            web_original = float(web_price_info['original_price'].replace('₹', '').replace(',', ''))
+            web_saved = float(web_price_info['savings'].replace('₹', '').replace(',', ''))
             
-            # Compare with web prices
-            print("\n🔍 Comparing calculated prices with web prices...")
-            web_price_info = buy_now_page.get_web_price_info()
+            print(f"🌐 Web discounted price: ₹{web_discounted:.2f}")
+            print(f"🌐 Web original price: ₹{web_original:.2f}")
+            print(f"🌐 Web savings: ₹{web_saved:.2f}")
             
-            if web_price_info:
-                web_discounted = float(web_price_info['discounted_price'].replace('₹', '').replace(',', ''))
-                web_original = float(web_price_info['original_price'].replace('₹', '').replace(',', ''))
-                web_saved = float(web_price_info['savings'].replace('₹', '').replace(',', ''))
-                
-                print(f"🌐 Web discounted price: ₹{web_discounted:.2f}")
-                print(f"🌐 Web original price: ₹{web_original:.2f}")
-                print(f"🌐 Web savings: ₹{web_saved:.2f}")
-                
-                if abs(web_discounted - total_bulk_discount_price) < 0.01:
-                    print("✅ Discounted price matches web price!")
-                else:
-                    print(f"❌ Discounted price mismatch: Calculated ₹{total_bulk_discount_price:.2f} vs Web ₹{web_discounted:.2f}")
-                
-                if abs(web_saved - bulk_saved_amount) < 0.01:
-                    print("✅ Saved amount matches web savings!")
-                else:
-                    print(f"❌ Saved amount mismatch: Calculated ₹{bulk_saved_amount:.2f} vs Web ₹{web_saved:.2f}")
+            if abs(web_discounted - discounted_total_price) < 0.01:
+                print("✅ Discounted price matches web price!")
             else:
-                print("❌ Failed to get web price information for comparison")
+                print(f"❌ Discounted price mismatch: Calculated ₹{discounted_total_price:.2f} vs Web ₹{web_discounted:.2f}")
+            
+            if abs(web_saved - saved_amount) < 0.01:
+                print("✅ Saved amount matches web savings!")
+            else:
+                print(f"❌ Saved amount mismatch: Calculated ₹{saved_amount:.2f} vs Web ₹{web_saved:.2f}")
+        else:
+            print("❌ Failed to get web price information for comparison")
 
 def test_buy_now_page(driver):
     """Main test function that orchestrates all buy now tests"""
@@ -244,6 +255,15 @@ def test_buy_now_page(driver):
     # Set custom quantity below minimum
     if not set_custom_quantity_below_min(buy_now_page, min_quantity, driver):
         return
+    
+    # Set a specific quantity for price comparison (e.g., bulk discount quantity)
+    if bulk_discount_quantity:
+        print(f"\n🔢 Setting quantity to {bulk_discount_quantity} for price comparison...")
+        if buy_now_page.click_button("set_custom_quantity"):
+            if buy_now_page.get_input(bulk_discount_quantity):
+                if buy_now_page.click_button("set"):
+                    print(f"✅ Quantity set to {bulk_discount_quantity} successfully!")
+                    time.sleep(2)  # Wait for price update
     
     # Calculate and compare prices
     calculate_and_compare_prices(buy_now_page)
