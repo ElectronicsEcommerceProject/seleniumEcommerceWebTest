@@ -35,32 +35,26 @@ def test_dashboard_navigation(driver):
 
     dashboard_page = MainDashboardPage(driver)
     print("Verifying if on dashboard...")
-    dashboard_xpath = "//button[contains(text(),'Buttonphone')]"
-    assert dashboard_page.is_on_dashboard(dashboard_xpath), "Failed to navigate to the main dashboard"
+    assert dashboard_page.is_on_dashboard(), "Failed to navigate to the main dashboard"
     print("✅ Successfully on the main dashboard!")
     
     print("🔍 Searching for products...")
-    search_box_selector = "input[placeholder='Search for products...']"
-    dashboard_page.search_product("samsung", search_box_selector)
+    dashboard_page.search_product("samsung")
     print("⏳ Verifying search results...")
-    results_selector = "[class*='product'], [class*='item'], [class*='card']"
-    assert dashboard_page.get_search_results(results_selector), "Search results not found"
+    assert dashboard_page.get_search_results(), "Search results not found"
     print("✅ Search results displayed successfully!")
     
-    is_cleared = dashboard_page.clear_search(search_box_selector)
+    is_cleared = dashboard_page.clear_search()
     if is_cleared:
         print("✅ Search box cleared successfully!")
     else:
         print("❌ Search box not cleared properly")
         return 
     
-    filter_xpath = "//*[@id='root']/div/div[4]/div/div[1]/button[4]"
-    dashboard_page.apply_brand_filter(filter_xpath)
+    dashboard_page.apply_brand_filter()
     print("✅ Brand filter applied successfully!")
     
-    brand_xpath = "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50') and contains(text(), 'Vivo')]"
-    wait_xpath = "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50')]"
-    product_count = dashboard_page.count_products_by_brand(brand_xpath, wait_xpath)
+    product_count = dashboard_page.count_products_by_brand()
     print(f"📊 Found {product_count} Vivo products")
 
     print("🔄 Refreshing page...")

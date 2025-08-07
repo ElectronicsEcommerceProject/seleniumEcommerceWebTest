@@ -4,70 +4,59 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 
-
-
 class MainDashboardPage:
+    # Locators
+    DASHBOARD_INDICATOR = (By.XPATH, "//button[contains(text(),'Buttonphone')]")
+    SEARCH_BOX = (By.CSS_SELECTOR, "input[placeholder='Search for products...']")
+    SEARCH_RESULTS = (By.CSS_SELECTOR, "[class*='product'], [class*='item'], [class*='card']")
+    BRAND_FILTER_BUTTON = (By.XPATH, "//button[contains(@class, 'px-4') and contains(@class, 'py-2') and contains(@class, 'rounded-full') and text()='Vivo']")
+    VIVO_BRAND_ELEMENT = (By.XPATH, "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50') and contains(text(), 'Vivo')]")
+    BRAND_WAIT_ELEMENT = (By.XPATH, "//div[contains(@class, 'text-blue-600') and contains(@class, 'bg-blue-50')]")
+    IMAGES = (By.TAG_NAME, "img")
+    
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
 
-    def is_on_dashboard(self, dashboard_xpath):
+    def is_on_dashboard(self):
         try:
-            self.wait.until(
-                EC.presence_of_element_located((By.XPATH, dashboard_xpath))
-            )
+            self.wait.until(EC.presence_of_element_located(self.DASHBOARD_INDICATOR))
             return True
         except:
             return False
     
-    def search_product(self, search_term, search_box_selector):
-        search_box = self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, search_box_selector))
-        )
+    def search_product(self, search_term):
+        search_box = self.wait.until(EC.element_to_be_clickable(self.SEARCH_BOX))
         search_box.clear()
         search_box.send_keys(search_term)
         search_box.send_keys(Keys.ENTER)
         
-    def get_search_results(self, results_selector):
+    def get_search_results(self):
         try:
-            self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, results_selector))
-            )
+            self.wait.until(EC.presence_of_element_located(self.SEARCH_RESULTS))
             return True
         except:
             return False
     
-    def clear_search(self, search_box_selector):
-        search_box = self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, search_box_selector))
-        )
+    def clear_search(self):
+        search_box = self.wait.until(EC.element_to_be_clickable(self.SEARCH_BOX))
         search_box.click()
         search_box.clear()
         search_box.send_keys(Keys.CONTROL + "a")
         search_box.send_keys(Keys.DELETE)
         return search_box.get_attribute("value") == ""
 
-    def apply_brand_filter(self, filter_xpath):
+    def apply_brand_filter(self):
         """Scrolls to and clicks the brand filter button using ActionChains."""
-        brand_filter_button = self.wait.until(
-            EC.element_to_be_clickable((By.XPATH, filter_xpath))
-        )
-
-        # Move to the element using ActionChains
+        brand_filter_button = self.wait.until(EC.element_to_be_clickable(self.BRAND_FILTER_BUTTON))
         actions = ActionChains(self.driver)
         actions.move_to_element(brand_filter_button).click().perform()
     
-    def count_products_by_brand(self, brand_xpath, wait_xpath=None):
+    def count_products_by_brand(self):
         """Count products with specific brand filter."""
         try:
-            # Wait for brand elements to be present
-            if wait_xpath:
-                self.wait.until(
-                    EC.presence_of_element_located((By.XPATH, wait_xpath))
-                )
-            
-            # Find elements using provided xpath
-            brand_elements = self.driver.find_elements(By.XPATH, brand_xpath)
+            self.wait.until(EC.presence_of_element_located(self.BRAND_WAIT_ELEMENT))
+            brand_elements = self.driver.find_elements(*self.VIVO_BRAND_ELEMENT)
             return len(brand_elements)
         except:
             return 0
@@ -79,12 +68,8 @@ class MainDashboardPage:
     def find_images_with_url_pattern(self, url_pattern):
         """Find all images that contain the specified URL pattern."""
         try:
-            # Wait for images to load
-            self.wait.until(
-                EC.presence_of_element_located((By.TAG_NAME, "img"))
-            )
+            self.wait.until(EC.presence_of_element_located(self.IMAGES))
             
-            # Find all images with the specified URL pattern
             # Scroll down to load all images
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             import time
