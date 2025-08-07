@@ -13,7 +13,7 @@ class BuyNowPage:
     SET_CUSTOM_QUANTITY_BUTTON = (By.XPATH, "//button[contains(text(), 'Set Custom Quantity')]")
     CUSTOM_QUANTITY_INPUT = (By.XPATH, "//input[@type='number' and @placeholder='Enter quantity']")
     SET_BUTTON = (By.XPATH, "//button[contains(text(), 'Set')]")
-    PRICE_CONTAINER = (By.XPATH, "//div[contains(@class, 'flex') and contains(@class, 'items-center') and contains(@class, 'space-x-2')]")
+    PRICE_CONTAINER = (By.XPATH, "//span[@class='text-xl font-bold text-green-600']")
     DISCOUNTED_PRICE = (By.XPATH, ".//span[contains(@class, 'text-green-600') and contains(@class, 'font-bold')]")
     ORIGINAL_PRICE = (By.XPATH, ".//span[contains(@class, 'line-through')]")
     SAVINGS_TEXT = (By.XPATH, ".//span[contains(text(), 'Save')]")
@@ -144,18 +144,19 @@ class BuyNowPage:
     def get_web_price_info(self):
         """Extract price and savings information from web elements."""
         try:
-            price_container = self.wait.until(EC.presence_of_element_located(self.PRICE_CONTAINER))
-            
-            # Extract discounted price (green text)
-            discounted_price_element = price_container.find_element(*self.DISCOUNTED_PRICE)
+            # Get the discounted price directly
+            discounted_price_element = self.wait.until(EC.presence_of_element_located(self.PRICE_CONTAINER))
             web_discounted_price = discounted_price_element.text.strip()
             
+            # Find parent container to get other price elements
+            parent_container = discounted_price_element.find_element(By.XPATH, "./parent::*")
+            
             # Extract original price (line-through)
-            original_price_element = price_container.find_element(*self.ORIGINAL_PRICE)
+            original_price_element = parent_container.find_element(*self.ORIGINAL_PRICE)
             web_original_price = original_price_element.text.strip()
             
             # Extract savings amount
-            savings_element = price_container.find_element(*self.SAVINGS_TEXT)
+            savings_element = parent_container.find_element(*self.SAVINGS_TEXT)
             web_savings = savings_element.text.strip().replace('Save ', '')
             
             return {
