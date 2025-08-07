@@ -26,7 +26,8 @@ def driver():
     yield driver
     driver.quit()
 
-def test_buy_now_page(driver):
+def perform_login(driver):
+    """Handle login process"""
     print("🌐 Opening website...")
     driver.get("https://maalaxmi.store/")
     
@@ -38,7 +39,7 @@ def test_buy_now_page(driver):
     login_page.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
     
     print("⏳ Verifying login success...")
-    time.sleep(2)  # Additional wait
+    time.sleep(2)
     if login_page.is_login_successful():
         print("✅ Login successful!")
     else:
@@ -47,144 +48,144 @@ def test_buy_now_page(driver):
         print(f"Current page title: {driver.title}")
         assert False, "Login failed - could not proceed to buy now test"
 
-    buy_now_page = BuyNowPage(driver)
-    
+def click_product(buy_now_page):
+    """Click on product"""
     print("🛒 Clicking on product...")
     if buy_now_page.click_on_product():
         print("✅ Product clicked successfully!")
+        return True
     else:
         print("❌ Failed to click on product")
-        return
+        return False
+
+def get_and_parse_product_details(buy_now_page):
+    """Get and parse product details"""
     print("📋 Getting product details...")
     product_details = buy_now_page.get_product_details()
     if product_details:
-            print("✅ Product details retrieved successfully!")
-            # Store in global variables
-            global product_price, quantity_discount, bulk_discount
-            product_price = product_details.get('price')
-            quantity_discount = product_details.get('quantity_discount')
-            bulk_discount = product_details.get('bulk_discount')
-            
-            # Parse discount details
-            global quantity_discount_percentage, quantity_discount_quantity, bulk_discount_percentage, bulk_discount_quantity
-            
-            if quantity_discount:
-                import re
-                # Extract percentage (e.g., "10.00%")
-                percentage_match = re.search(r'(\d+\.\d+)%', quantity_discount)
-                quantity_discount_percentage = percentage_match.group(1) + '%' if percentage_match else None
-                
-                # Extract quantity (e.g., "2+" becomes 3)
-                quantity_match = re.search(r'(\d+)\+', quantity_discount)
-                quantity_discount_quantity = int(quantity_match.group(1)) + 1 if quantity_match else None
-            
-            if bulk_discount:
-                # Extract percentage (e.g., "25.00%")
-                percentage_match = re.search(r'(\d+\.\d+)%', bulk_discount)
-                bulk_discount_percentage = percentage_match.group(1) + '%' if percentage_match else None
-                
-                # Extract quantity (e.g., "4+" becomes 5)
-                quantity_match = re.search(r'(\d+)\+', bulk_discount)
-                bulk_discount_quantity = int(quantity_match.group(1)) + 1 if quantity_match else None
-            
-            print(f"💰 Price: {product_price}")
-            print(f"📊 Quantity Discount: {quantity_discount}")
-            print(f"📦 Bulk Discount: {bulk_discount}")
-            print(f"📊 Quantity Discount Percentage: {quantity_discount_percentage}")
-            print(f"📊 Quantity Discount Quantity: {quantity_discount_quantity}")
-            print(f"📦 Bulk Discount Percentage: {bulk_discount_percentage}")
-            print(f"📦 Bulk Discount Quantity: {bulk_discount_quantity}")
-    else:
-            print("❌ Failed to get product details")
-            return
+        print("✅ Product details retrieved successfully!")
         
+        global product_price, quantity_discount, bulk_discount
+        global quantity_discount_percentage, quantity_discount_quantity, bulk_discount_percentage, bulk_discount_quantity
+        
+        product_price = product_details.get('price')
+        quantity_discount = product_details.get('quantity_discount')
+        bulk_discount = product_details.get('bulk_discount')
+        
+        import re
+        if quantity_discount:
+            percentage_match = re.search(r'(\d+\.\d+)%', quantity_discount)
+            quantity_discount_percentage = percentage_match.group(1) + '%' if percentage_match else None
+            quantity_match = re.search(r'(\d+)\+', quantity_discount)
+            quantity_discount_quantity = int(quantity_match.group(1)) + 1 if quantity_match else None
+        
+        if bulk_discount:
+            percentage_match = re.search(r'(\d+\.\d+)%', bulk_discount)
+            bulk_discount_percentage = percentage_match.group(1) + '%' if percentage_match else None
+            quantity_match = re.search(r'(\d+)\+', bulk_discount)
+            bulk_discount_quantity = int(quantity_match.group(1)) + 1 if quantity_match else None
+        
+        print(f"💰 Price: {product_price}")
+        print(f"📊 Quantity Discount: {quantity_discount}")
+        print(f"📦 Bulk Discount: {bulk_discount}")
+        print(f"📊 Quantity Discount Percentage: {quantity_discount_percentage}")
+        print(f"📊 Quantity Discount Quantity: {quantity_discount_quantity}")
+        print(f"📦 Bulk Discount Percentage: {bulk_discount_percentage}")
+        print(f"📦 Bulk Discount Quantity: {bulk_discount_quantity}")
+        return True
+    else:
+        print("❌ Failed to get product details")
+        return False
+
+def get_quantity_info(buy_now_page):
+    """Get quantity information"""
     print("🔢 Getting quantity information...")
     min_quantity = buy_now_page.get_quantity_info()
     if min_quantity:
-            print("✅ Quantity information retrieved successfully!")
-            print(f"📊 Using min_quantity value: {min_quantity}")
+        print("✅ Quantity information retrieved successfully!")
+        print(f"📊 Using min_quantity value: {min_quantity}")
+        return min_quantity
     else:
-            print("❌ Failed to get quantity information")
-            return
-        
+        print("❌ Failed to get quantity information")
+        return None
+
+def set_custom_quantity_above_min(buy_now_page, min_quantity):
+    """Set custom quantity above minimum"""
     print("🔘 Clicking Set Custom Quantity button...")
     if buy_now_page.click_button("set_custom_quantity"):
         print("✅ Set Custom Quantity button clicked successfully!")
-            
+        
         print("✏️ Entering custom quantity...")
         if buy_now_page.get_input(min_quantity+1):
             print(f"✅ Custom quantity entered successfully! {min_quantity+1}")
         else:
             print("❌ Failed to enter custom quantity")
-            return
-            
+            return False
     else:
         print("❌ Failed to click Set Custom Quantity button")
-        return
+        return False
+    
     print("⚙️ Clicking Set button...")
     if buy_now_page.click_button("set"):
         print(f"✅ Set button clicked successfully! and updated quantity becomes {min_quantity+1}")
+        return True
     else:
-        print("❌ Failed to click Set button") 
-        return
-    
-    #setting quantity to be below the minimum quantity...
+        print("❌ Failed to click Set button")
+        return False
+
+def set_custom_quantity_below_min(buy_now_page, min_quantity, driver):
+    """Set custom quantity below minimum and handle alert"""
     if buy_now_page.click_button("set_custom_quantity"):
         print("✅ Set Custom Quantity button clicked successfully!")
-            
+        
         print("✏️ Entering custom quantity...")
         if buy_now_page.get_input(min_quantity-1):
             print(f"✅ Custom quantity entered successfully! {min_quantity-1}")
         else:
             print("❌ Failed to enter custom quantity")
-            return
-            
+            return False
     else:
         print("❌ Failed to click Set Custom Quantity button")
-        return
+        return False
+    
     print("⚙️ Clicking Set button...")
     if buy_now_page.click_button("set"):
         print(f"✅ Set button clicked successfully! and updated quantity becomes {min_quantity-1}")
+        
         # Handle alert
         try:
-            time.sleep(1)  # Wait for alert to appear
+            time.sleep(1)
             alert = driver.switch_to.alert
             alert_message = alert.text
             print(f"⚠️ Alert message: {alert_message}")
-            alert.accept()  # Click OK on alert
+            alert.accept()
             print("✅ Alert accepted")
         except Exception as e:
             print(f"❌ No alert found or error handling alert: {e}")
+        return True
     else:
-        print("❌ Failed to click Set button") 
-        return
-    
-    #checking after increase in quantity to quantity_discount_quantity, bulk_discount_quantity the discount applied on price are correct or not
-     # Calculate discount prices
+        print("❌ Failed to click Set button")
+        return False
+
+def calculate_and_compare_prices(buy_now_page):
+    """Calculate discount prices and compare with web prices"""
     if product_price and quantity_discount_percentage and bulk_discount_percentage:
         price_value = float(product_price.replace('₹', '').replace(',', ''))
-        # Extract numeric price value
-                
-                
         print(f"\n💰 Actual Price: ₹{price_value:.2f}")
-                
+        
         if quantity_discount_percentage:
-        # Calculate total price after quantity discount
             discount_percent = float(quantity_discount_percentage.replace('%', ''))
             discounted_unit_price = price_value * (1 - discount_percent / 100)
             total_quantity_discount_price = discounted_unit_price * quantity_discount_quantity
-            # Calculate saved amount for quantity discount
             actual_total_price_qty = price_value * quantity_discount_quantity
             quantity_saved_amount = actual_total_price_qty - total_quantity_discount_price
             print(f"📊 Total price after {quantity_discount_percentage} quantity discount for {quantity_discount_quantity} units: ₹{total_quantity_discount_price:.2f}")
             print(f"💰 Amount saved with quantity discount: ₹{quantity_saved_amount:.2f} (Original: ₹{actual_total_price_qty:.2f})")
-                
-        # Calculate total price after bulk discount
+        
         if bulk_discount_percentage:
             bulk_percent = float(bulk_discount_percentage.replace('%', ''))
             discounted_bulk_unit_price = price_value * (1 - bulk_percent / 100)
             total_bulk_discount_price = discounted_bulk_unit_price * bulk_discount_quantity
-            # Calculate saved amount for bulk discount
             actual_total_price_bulk = price_value * bulk_discount_quantity
             bulk_saved_amount = actual_total_price_bulk - total_bulk_discount_price
             print(f"📦 Total price after {bulk_discount_percentage} bulk discount for {bulk_discount_quantity} units: ₹{total_bulk_discount_price:.2f}")
@@ -203,7 +204,6 @@ def test_buy_now_page(driver):
                 print(f"🌐 Web original price: ₹{web_original:.2f}")
                 print(f"🌐 Web savings: ₹{web_saved:.2f}")
                 
-                # Compare prices
                 if abs(web_discounted - total_bulk_discount_price) < 0.01:
                     print("✅ Discounted price matches web price!")
                 else:
@@ -215,4 +215,36 @@ def test_buy_now_page(driver):
                     print(f"❌ Saved amount mismatch: Calculated ₹{bulk_saved_amount:.2f} vs Web ₹{web_saved:.2f}")
             else:
                 print("❌ Failed to get web price information for comparison")
+
+def test_buy_now_page(driver):
+    """Main test function that orchestrates all buy now tests"""
+    # Login
+    perform_login(driver)
+    
+    # Initialize buy now page
+    buy_now_page = BuyNowPage(driver)
+    
+    # Click product
+    if not click_product(buy_now_page):
+        return
+    
+    # Get and parse product details
+    if not get_and_parse_product_details(buy_now_page):
+        return
+    
+    # Get quantity information
+    min_quantity = get_quantity_info(buy_now_page)
+    if not min_quantity:
+        return
+    
+    # Set custom quantity above minimum
+    if not set_custom_quantity_above_min(buy_now_page, min_quantity):
+        return
+    
+    # Set custom quantity below minimum
+    if not set_custom_quantity_below_min(buy_now_page, min_quantity, driver):
+        return
+    
+    # Calculate and compare prices
+    calculate_and_compare_prices(buy_now_page)
     
