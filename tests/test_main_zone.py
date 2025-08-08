@@ -11,6 +11,9 @@ import time
 
 load_dotenv()
 
+print("[INFO] Main Zone Test Suite Initialized")
+print("[INFO] Loading environment variables and dependencies")
+
 @pytest.fixture
 def driver():
     driver = get_driver()
@@ -19,78 +22,80 @@ def driver():
 
 def perform_login(driver):
     """Handle login process"""
-    print("🌐 Opening website...")
+    print("[STEP] Opening website...")
     driver.get("https://maalaxmi.store/")
     
     login_page = LoginPage(driver)
-    print("🔑 Opening sign-in modal...")
+    print("[ACTION] Opening sign-in modal...")
     login_page.open_sign_in_modal()
-    print("📝 Entering credentials and logging in...")
-    print(f"Using email: {os.getenv('EMAIL')}")
+    print("[ACTION] Entering credentials and logging in...")
+    print(f"[INFO] Using email: {os.getenv('EMAIL')}")
     login_page.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
     
-    print("⏳ Verifying login success...")
+    print("[STEP] Verifying login success...")
     time.sleep(2)
     if login_page.is_login_successful():
-        print("✅ Login successful!")
+        print("[SUCCESS] Login successful!")
     else:
-        print("❌ Login failed - taking screenshot for debugging")
+        print("[FAIL] Login failed - taking screenshot for debugging")
         driver.save_screenshot("login_failed.png")
-        print(f"Current page title: {driver.title}")
+        print(f"[INFO] Current page title: {driver.title}")
         assert False, "Login failed - could not proceed to zone test"
 
 def click_category(zone_page):
     """Click on category to navigate to zone page"""
-    print("💱 Clicking on category...")
+    print("[ACTION] Clicking on category...")
     if zone_page.clicked_on_category():
-        print("✅ Category clicked successfully!")
+        print("[SUCCESS] Category clicked successfully!")
         return True
     else:
-        print("❌ Failed to click category")
+        print("[FAIL] Failed to click category")
         return False
 
 def verify_zone_page_access(zone_page):
     """Verify successful navigation to zone page"""
-    print("Verifying if on zone page...")
+    print("[STEP] Verifying if on zone page...")
     if zone_page.is_on_zone_page():
-        print("✅ Successfully on the main zone!")
+        print("[SUCCESS] Successfully on the main zone!")
         return True
     else:
-        print("❌ Failed to navigate to the main zone")
+        print("[FAIL] Failed to navigate to the main zone")
         return False
 
 def check_brand_checkboxes(zone_page):
     """Check brand checkboxes status"""
-    print("🔍 Checking brand checkboxes...")
+    print("[ACTION] Checking brand checkboxes...")
     zone_page.check_brand_checkboxes()
 
 def find_brand_names(zone_page):
     """Find and display brand names from search results"""
-    print("🔍 Finding brand names from search results...")
+    print("[ACTION] Finding brand names from search results...")
     zone_page.found_brand_names()
 
 def search_specific_brand(zone_page):
     """Search for a specific brand"""
-    print("🔍 Searching for a specific brand...")
+    print("[ACTION] Searching for a specific brand...")
     if zone_page.search_brand_name("mi", "brand"):
-        print("✅ Searched for brand successfully!")
+        print("[SUCCESS] Searched for brand successfully!")
         return True
     else:
-        print("❌ Failed to search for brand")
+        print("[FAIL] Failed to search for brand")
         return False
 
 def count_products(zone_page, url_pattern):
     """Count products on page"""
-    print("🔍 Counting products on page...")
+    print("[ACTION] Counting products on page...")
     zone_page.count_products_on_page(url_pattern)
 
 def search_product(zone_page):
     """Search for a specific product"""
     zone_page.search_brand_name("satyamtest", "product")
-    print("product search applied..")
+    print("[INFO] Product search applied")
 
 def test_main_zone(driver):
     """Main test function that orchestrates all zone tests"""
+    print("[TEST] Starting main zone test...")
+    
     # Login
     perform_login(driver)
     
@@ -127,3 +132,5 @@ def test_main_zone(driver):
     
     # Count products after product search
     count_products(zone_page, url_pattern)
+    
+    print("[PASS] Main zone test completed successfully")
