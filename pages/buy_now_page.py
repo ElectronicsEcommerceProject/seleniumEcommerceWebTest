@@ -20,6 +20,10 @@ class BuyNowPage:
     DETAIL_ROWS = (By.XPATH, ".//div[contains(@class, 'flex') and contains(@class, 'justify-between')]")
     SPAN_TAGS = (By.TAG_NAME, "span")
     WRITE_REVIEW_BUTTON = (By.XPATH, "//button[normalize-space()='Write a Review']")
+    REVIEW_TITLE_INPUT = (By.XPATH, "//input[@placeholder='Summarize your experience']")
+    REVIEW_TEXT_AREA = (By.XPATH, "//textarea[@placeholder='Share your experience with this product']")
+    VARIANT_SELECT = (By.XPATH, "//select[contains(@class, 'w-full p-2 border')]")
+    SUBMIT_REVIEW_BUTTON = (By.XPATH, "//button[contains(text(), 'Submit Review')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -195,4 +199,75 @@ class BuyNowPage:
             return True
         except Exception as e:
             print(f"Error clicking write review button: {e}")
+            return False
+    
+    def fill_review_form(self):
+        """Fill the review form with test data."""
+        try:
+            # Wait for form to appear
+            time.sleep(2)
+            
+            # Fill review title
+            title_input = self.wait.until(EC.element_to_be_clickable(self.REVIEW_TITLE_INPUT))
+            title_input.clear()
+            title_input.send_keys("This is a test review title by selenium")
+            print("Review title filled successfully")
+            
+            # Fill review text
+            review_textarea = self.wait.until(EC.element_to_be_clickable(self.REVIEW_TEXT_AREA))
+            review_textarea.clear()
+            review_textarea.send_keys("This is a test review text by selenium")
+            print("Review text filled successfully")
+            
+            # Select variant (select the first available option)
+            try:
+                variant_select = self.wait.until(EC.element_to_be_clickable(self.VARIANT_SELECT))
+                # Click to open dropdown
+                variant_select.click()
+                time.sleep(1)
+                # Select the first option (index 1, since 0 is "Select a variant")
+                options = variant_select.find_elements(By.TAG_NAME, "option")
+                if len(options) > 1:
+                    options[1].click()
+                    print("Product variant selected successfully")
+            except Exception as e:
+                print(f"Could not select variant: {e}")
+            
+            print("Review form filled successfully")
+            return True
+            
+        except Exception as e:
+            print(f"Error filling review form: {e}")
+            return False
+    
+    def submit_review_and_verify(self):
+        """Click submit review button and verify success alert."""
+        try:
+            # Click submit review button
+            submit_button = self.wait.until(EC.element_to_be_clickable(self.SUBMIT_REVIEW_BUTTON))
+            submit_button.click()
+            print("Submit review button clicked successfully")
+            
+            # Wait for alert and verify message
+            time.sleep(2)
+            try:
+                alert = self.driver.switch_to.alert
+                alert_text = alert.text
+                print(f"Alert message: {alert_text}")
+                
+                if alert_text == "Thank you! Your review has been submitted successfully.":
+                    alert.accept()
+                    print("Review submitted successfully!")
+                    return True
+                else:
+                    alert.accept()
+                    print(f"Unexpected alert message: {alert_text}")
+                    return False
+                    
+            except Exception as e:
+                print(f"No alert found or error handling alert: {e}")
+                return False
+                
+        except Exception as e:
+            print(f"Error submitting review: {e}")
             return False
