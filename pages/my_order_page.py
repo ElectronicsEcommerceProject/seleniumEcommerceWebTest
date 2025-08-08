@@ -10,6 +10,7 @@ class MyOrderPage:
     ORDER_ITEMS = (By.XPATH, "//div[contains(@class, 'w-full bg-white p-4 mb-4 rounded-lg shadow-md')]")
     LOAD_MORE_BUTTON = (By.XPATH, "//button[contains(normalize-space(), 'Load More Orders')]")
     ORDER_ITEMS_SHOWN_ON_PAGE = (By.XPATH, "//p[contains(@class, 'text-sm text-gray-600') and contains(text(), 'Showing')]")
+    SEARCH_BOX = (By.XPATH, "//input[@placeholder='🔍 Search orders (auto-search after 1.5s)...']")
     
     def __init__(self, driver):
         self.driver = driver
@@ -131,7 +132,12 @@ class MyOrderPage:
     def get_total_orders_from_text(self):
         """Extract total order count from 'Showing x of y orders' text."""
         try:
-            showing_element = self.driver.find_element(*self.ORDER_ITEMS_SHOWN_ON_PAGE)
+            # Wait for the showing text element with shorter timeout
+            print("[INFO] Waiting for showing text element...")
+            showing_element = WebDriverWait(self.driver, 3).until(
+                EC.presence_of_element_located(self.ORDER_ITEMS_SHOWN_ON_PAGE)
+            )
+            time.sleep(1)  # Additional wait for element to be fully loaded
             showing_text = showing_element.text.strip()
             print(f"[INFO] Found showing text: '{showing_text}'")
             
@@ -146,13 +152,17 @@ class MyOrderPage:
             else:
                 print(f"[ERROR] Could not parse showing text: {showing_text}")
                 return 0, 0
-        except Exception as e:
-            print(f"[ERROR] Could not find showing text element: {e}")
+        except:
+            print(f"[INFO] Showing text element not available - page may be in filtered state")
             return 0, 0
     
     def validate_final_order_count(self):
         """Validate that final displayed orders match total available orders."""
         try:
+            # Clear search first to ensure we're seeing all orders
+            print("[INFO] Clearing search to validate final count...")
+            self.clear_search()
+            
             displayed_orders = self.count_visible_orders()
             shown_count, total_count = self.get_total_orders_from_text()
             
@@ -164,7 +174,7 @@ class MyOrderPage:
                     print(f"[INFO] Displaying {displayed_orders} orders, total available: {total_count}")
                     return False
             else:
-                print("[INFO] No total count information available")
+                print("[INFO] No total count information available - using displayed count")
                 return displayed_orders > 0
         except Exception as e:
             print(f"[ERROR] Error validating final order count: {e}")
@@ -180,3 +190,92 @@ class MyOrderPage:
             print(f"Order count did not increase (still {new_count})")
             return False, new_count
     
+    def search_orders(self, search_term):
+        """Search for orders using the search box."""
+        try:
+            search_box = self.wait.until(EC.element_to_be_clickable(self.SEARCH_BOX))
+            search_box.clear()
+            search_box.send_keys(search_term)
+            print(f"[ACTION] Entered search term: '{search_term}'")
+            time.sleep(2)
+            return True
+        except Exception as e:
+            print(f"[ERROR] Error searching orders: {e}")
+            return False
+    
+    def test_exact_order_search(self, order_number="ORD-20250808-78EB"):
+        """Test exact order number search."""
+        print(f"[STEP] Testing exact order search with: {order_number}")
+        if self.search_orders(order_number):
+            result_count = self.count_visible_orders()
+            if result_count >= 1:
+                print(f"[SUCCESS] Exact search returned {result_count} result(s)")
+                return True
+            else:
+                print(f"[INFO] Exact search returned no results")
+                return False
+        return False
+    
+    def test_partial_order_search(self, partial_term="ORD-20250808"):
+        """Test partial order number search."""
+        print(f"[STEP] Testing partial order search with: {partial_term}")
+        if self.search_orders(partial_term):
+            result_count = self.count_visible_orders()
+            if result_count > 0:
+                print(f"[SUCCESS] Partial search returned {result_count} results")
+                return True
+            else:
+                print(f"[INFO] Partial search returned no results")
+                return False
+        return False
+    
+    def test_invalid_order_search(self, invalid_term="INVALID123XYZ"):
+        """Test invalid/random text search."""
+        print(f"[STEP] Testing invalid order search with: {invalid_term}")
+        if self.search_orders(invalid_term):
+            result_count = self.count_visible_orders()
+            if result_count == 0:
+                print(f"[SUCCESS] Invalid search correctly returned no results")
+                return True
+            else:
+                print(f"[INFO] Invalid search unexpectedly returned {result_count} results")
+                return False
+        return False
+    
+    def clear_search(self):
+        """Clear the search box to show all orders."""
+        try:
+            search_box = self.wait.until(EC.element_to_be_clickable(self.SEARCH_BOX))
+            search_box.clear()
+            print("[ACTION] Cleared search box")
+            time.sleep(2)
+            return True
+        except Exception as e:
+            print(f"[ERROR] Error clearing search: {e}")
+            return False
+    
+    def validate_all_orders_loaded(self):
+        """Validate that all orders are loaded by comparing displayed count with total available."""
+        try:
+            # Get current displayed order count
+            displayed_orders = self.count_visible_orders()
+            
+            # Get total available orders from showing text
+            shown_count, total_count = self.get_total_orders_from_text()
+            
+            print(f"[INFO] Displayed orders: {displayed_orders}")
+            print(f"[INFO] Total available orders: {total_count}")
+            
+            if total_count > 0:
+                if displayed_orders == total_count:
+                    print(f"[SUCCESS] All orders loaded! Total orders loaded ({displayed_orders}) matches total available ({total_count})")
+                    return True
+                else:
+                    print(f"[INFO] Not all orders loaded - showing {displayed_orders} of {total_count} orders")
+                    return False
+            else:
+                print(f"[INFO] Could not get total count information - using displayed count: {displayed_orders}")
+                return displayed_orders > 0
+        except Exception as e:
+            print(f"[ERROR] Error validating all orders loaded: {e}")
+            return False

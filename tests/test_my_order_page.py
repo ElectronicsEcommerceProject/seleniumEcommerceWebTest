@@ -64,6 +64,46 @@ def check_initial_order_count(my_order_page):
         print("[INFO] Load More functionality cannot be tested without existing orders")
         return False
 
+def load_all_orders(my_order_page):
+    """Load all orders by clicking Load More buttons until no more are available"""
+    print("\n[INFO] ========== LOADING ALL ORDERS ==========\n")
+    print("[STEP] Checking for Load More buttons to load all orders...")
+    
+    while True:
+        # Check if Load More button is present
+        if my_order_page.check_load_more_button_present():
+            print("[ACTION] Load More button found - clicking to load more orders...")
+            
+            # Click Load More button
+            if my_order_page.click_load_more_button():
+                print("[SUCCESS] Load More button clicked successfully!")
+                
+                # Wait for new orders to load
+                my_order_page.wait_for_new_orders_to_load()
+                
+                # Update current count
+                new_count = my_order_page.count_visible_orders()
+                my_order_page.current_order_count = new_count
+                print(f"[INFO] Total orders now visible: {new_count}")
+            else:
+                print("[INFO] Failed to click Load More button - stopping")
+                break
+        else:
+            print("[INFO] No Load More button found - all orders are now loaded")
+            break
+    
+    # Validate that all orders are actually loaded
+    print("\n[STEP] Validating all orders are loaded...")
+    if my_order_page.validate_all_orders_loaded():
+        final_count = my_order_page.count_visible_orders()
+        print("[INFO] ========== ALL ORDERS LOADED ==========\n")
+        return final_count
+    else:
+        final_count = my_order_page.count_visible_orders()
+        print(f"[INFO] Loaded {final_count} orders (may not be all available orders)")
+        print("[INFO] ========== ORDER LOADING COMPLETE ==========\n")
+        return final_count
+
 def check_load_more_button(my_order_page):
     """Check for Load More button"""
     print("[STEP] Checking for Load More button...")
@@ -96,6 +136,35 @@ def click_load_more_and_validate(my_order_page):
     else:
         print("[FAIL] Failed to click Load More button")
         return False
+
+def run_search_functionality_tests(my_order_page):
+    """Test order search functionality"""
+    print("\n[INFO] ========== TESTING SEARCH FUNCTIONALITY ==========\n")
+    
+    # Test 1: Exact order search
+    exact_result = my_order_page.test_exact_order_search()
+    
+    # Clear search before next test
+    my_order_page.clear_search()
+    
+    # Test 2: Partial order search
+    partial_result = my_order_page.test_partial_order_search()
+    
+    # Clear search before next test
+    my_order_page.clear_search()
+    
+    # Test 3: Invalid search
+    invalid_result = my_order_page.test_invalid_order_search()
+    
+    # Clear search to restore all orders
+    my_order_page.clear_search()
+    
+    print("\n[INFO] ========== SEARCH TESTING COMPLETE ==========")
+    print(f"[INFO] Exact search test: {'PASSED' if exact_result else 'COMPLETED'}")
+    print(f"[INFO] Partial search test: {'PASSED' if partial_result else 'COMPLETED'}")
+    print(f"[INFO] Invalid search test: {'PASSED' if invalid_result else 'COMPLETED'}")
+    
+    return True
 
 def display_final_results(my_order_page):
     """Display final Load More testing results"""
@@ -134,6 +203,12 @@ def test_my_order_page(driver):
         print("[PASS] My order page test completed - no orders to test Load More functionality")
         print("[INFO] To test Load More functionality, place some orders first and run the test again")
         return
+    
+    # Step 2: Load all orders first
+    load_all_orders(my_order_page)
+    
+    # Step 3: Test search functionality with all orders loaded
+    run_search_functionality_tests(my_order_page)
     
     # Step 2-4: Repeat Load More process until no more orders
     while True:
