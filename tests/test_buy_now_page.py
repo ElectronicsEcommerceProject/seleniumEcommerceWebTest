@@ -232,6 +232,16 @@ def calculate_and_compare_prices(buy_now_page):
         else:
             print("[FAIL] Failed to get web price information for comparison")
 
+def click_write_review(buy_now_page):
+    """Click on write review button"""
+    print("[ACTION] Clicking write review button...")
+    if buy_now_page.click_write_review_button():
+        print("[SUCCESS] Write review button clicked successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to click write review button")
+        return False
+
 def test_buy_now_page(driver):
     """Main test function that orchestrates all buy now tests"""
     print("[TEST] Starting buy now page test...")
@@ -301,5 +311,11 @@ def test_buy_now_page(driver):
         calculate_and_compare_prices(buy_now_page)
     
     print("\n[INFO] ========== PRICE TESTING COMPLETE ==========\n")
+    
+    # Test write review button
+    print("[STEP] Testing write review functionality...")
+    click_write_review(buy_now_page)
+    time.sleep(5)
+    
     print("[PASS] Buy now page test completed successfully")
     

@@ -19,6 +19,7 @@ class BuyNowPage:
     SAVINGS_TEXT = (By.XPATH, ".//span[contains(text(), 'Save')]")
     DETAIL_ROWS = (By.XPATH, ".//div[contains(@class, 'flex') and contains(@class, 'justify-between')]")
     SPAN_TAGS = (By.TAG_NAME, "span")
+    WRITE_REVIEW_BUTTON = (By.XPATH, "//button[normalize-space()='Write a Review']")
     
     def __init__(self, driver):
         self.driver = driver
@@ -177,3 +178,21 @@ class BuyNowPage:
         except Exception as e:
             print(f"Error getting current quantity: {e}")
             return None
+    
+    def click_write_review_button(self):
+        """Click on the write review button."""
+        try:
+            review_button = self.wait.until(EC.element_to_be_clickable(self.WRITE_REVIEW_BUTTON))
+            
+            # Scroll to the button
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", review_button)
+            time.sleep(1)
+            
+            # Click the button
+            self.driver.execute_script("arguments[0].click();", review_button)
+            print("Write review button clicked successfully")
+            
+            return True
+        except Exception as e:
+            print(f"Error clicking write review button: {e}")
+            return False
