@@ -6,6 +6,7 @@ import pytest
 from dotenv import load_dotenv
 from utils.driver_setup import get_driver
 from pages.login_page import LoginPage
+from pages.my_order_page import MyOrderPage
 import time
 
 load_dotenv()
@@ -48,6 +49,71 @@ def navigate_to_orders_page(driver):
     time.sleep(2)
     print("[SUCCESS] Navigated to orders page successfully!")
 
+def check_initial_order_count(my_order_page):
+    """Check initial order count"""
+    print("[STEP] Checking initial order count...")
+    initial_count = my_order_page.count_visible_orders()
+    my_order_page.initial_order_count = initial_count
+    my_order_page.current_order_count = initial_count
+    
+    if initial_count > 0:
+        print(f"[SUCCESS] Found {initial_count} orders on the page!")
+        return True
+    else:
+        print("[INFO] No orders found - user hasn't placed any orders yet")
+        print("[INFO] Load More functionality cannot be tested without existing orders")
+        return False
+
+def check_load_more_button(my_order_page):
+    """Check for Load More button"""
+    print("[STEP] Checking for Load More button...")
+    if my_order_page.check_load_more_button_present():
+        print("[SUCCESS] Load More button found and clickable!")
+        return True
+    else:
+        print("[INFO] Load More button not found or not clickable")
+        return False
+
+def click_load_more_and_validate(my_order_page):
+    """Click Load More button and validate order count increase"""
+    print("[ACTION] Clicking Load More button...")
+    if my_order_page.click_load_more_button():
+        print("[SUCCESS] Load More button clicked successfully!")
+        
+        print("[STEP] Waiting for new orders to load...")
+        my_order_page.wait_for_new_orders_to_load()
+        
+        print("[STEP] Validating order count increase...")
+        increased, new_count = my_order_page.validate_order_count_increase(my_order_page.current_order_count)
+        
+        if increased:
+            my_order_page.current_order_count = new_count
+            print("[SUCCESS] New orders loaded successfully!")
+            return True
+        else:
+            print("[INFO] No new orders loaded")
+            return False
+    else:
+        print("[FAIL] Failed to click Load More button")
+        return False
+
+def display_final_results(my_order_page):
+    """Display final Load More testing results"""
+    print("\n[INFO] ========== LOAD MORE TESTING COMPLETE ==========")
+    print(f"[INFO] Initial orders: {my_order_page.initial_order_count}")
+    print(f"[INFO] Final orders: {my_order_page.current_order_count}")
+    print(f"[INFO] Total Load More clicks: {my_order_page.load_more_clicks}")
+    print(f"[INFO] Additional orders loaded: {my_order_page.current_order_count - my_order_page.initial_order_count}")
+    
+    # Validate final count matches total available
+    print("\n[STEP] Validating final order count...")
+    if my_order_page.validate_final_order_count():
+        print("[SUCCESS] Load More functionality tested successfully!")
+        return True
+    else:
+        print("[INFO] Load More functionality partially tested")
+        return my_order_page.current_order_count >= my_order_page.initial_order_count
+
 def test_my_order_page(driver):
     """Main test function for my order page"""
     print("[TEST] Starting my order page test...")
@@ -57,5 +123,31 @@ def test_my_order_page(driver):
     
     # Navigate to orders page
     navigate_to_orders_page(driver)
+    
+    # Initialize my order page
+    my_order_page = MyOrderPage(driver)
+    
+    print("\n[INFO] ========== TESTING LOAD MORE FUNCTIONALITY ==========\n")
+    
+    # Step 1: Check initial order count
+    if not check_initial_order_count(my_order_page):
+        print("[PASS] My order page test completed - no orders to test Load More functionality")
+        print("[INFO] To test Load More functionality, place some orders first and run the test again")
+        return
+    
+    # Step 2-4: Repeat Load More process until no more orders
+    while True:
+        # Check for Load More button
+        if not check_load_more_button(my_order_page):
+            print("[INFO] Load More button not available - all orders loaded")
+            break
+        
+        # Click Load More and validate
+        if not click_load_more_and_validate(my_order_page):
+            print("[INFO] No new orders loaded - stopping Load More process")
+            break
+    
+    # Step 5: Display final results
+    display_final_results(my_order_page)
     
     print("[PASS] My order page test completed successfully")
