@@ -9,6 +9,9 @@ from pages.login_page import LoginPage
 
 load_dotenv()
 
+print("[INFO] Login Test Suite Initialized")
+print("[INFO] Loading environment variables and dependencies")
+
 
 @pytest.fixture
 def driver():
@@ -17,20 +20,22 @@ def driver():
     driver.quit()
 
 def test_login_valid(driver):
-    print("🌐 Opening website...")
+    print("[TEST] Starting login test...")
+    print("[STEP] Navigating to website: https://maalaxmi.store/")
     driver.get("https://maalaxmi.store/")
     
     login_page = LoginPage(driver)
-    print("🔑 Opening sign-in modal...")
+    print("[STEP] Opening sign-in modal...")
     login_page.open_sign_in_modal()
-    print("📝 Entering credentials and logging in...")
+    
+    print("[STEP] Entering credentials and attempting login...")
     login_page.login(os.getenv("EMAIL"), os.getenv("PASSWORD"))
     
-    print("⏳ Verifying login success...")
+    print("[STEP] Verifying login success...")
     if login_page.is_login_successful():
-        print("✅ Login successful!")
+        print("[PASS] Login test completed successfully")
     else:
-        print("❌ Login failed!")
+        print("[FAIL] Login test failed - user not authenticated")
     
     assert login_page.is_login_successful(), "Login failed - expected element not found"
 
