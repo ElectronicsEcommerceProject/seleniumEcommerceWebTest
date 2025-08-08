@@ -25,6 +25,8 @@ class BuyNowPage:
     VARIANT_SELECT = (By.XPATH, "//select[contains(@class, 'w-full p-2 border')]")
     SUBMIT_REVIEW_BUTTON = (By.XPATH, "//button[contains(text(), 'Submit Review')]")
     BUY_NOW_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-green-600') and .//div[text()='BUY NOW']]")
+    ADDRESS_INFO = (By.XPATH, "//*[contains(text(), 'addresses') or contains(text(), 'address')]")
+    ADDRESS_AREA = (By.XPATH, "//div[contains(@class, 'p-4 border rounded-lg cursor-pointer') and contains(@class, 'transition-colors')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -308,3 +310,83 @@ class BuyNowPage:
         except Exception as e:
             print(f"Error getting BUY NOW button prices: {e}")
             return None
+    
+    def click_buy_now_button(self):
+        """Click BUY NOW button and handle alert."""
+        try:
+            buy_now_button = self.wait.until(EC.element_to_be_clickable(self.BUY_NOW_BUTTON))
+            
+            # Scroll to the button
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", buy_now_button)
+            time.sleep(1)
+            
+            # Click the button
+            self.driver.execute_script("arguments[0].click();", buy_now_button)
+            print("BUY NOW button clicked successfully")
+            
+            # Wait for alert and handle it
+            time.sleep(2)
+            try:
+                alert = self.driver.switch_to.alert
+                alert_text = alert.text
+                print(f"Alert message: {alert_text}")
+                alert.accept()
+                print("Alert accepted successfully")
+                
+                # Wait for page to load and get address information
+                time.sleep(3)
+                try:
+                    address_info = self.wait.until(EC.presence_of_element_located(self.ADDRESS_INFO))
+                    address_text = address_info.text.strip()
+                    print(f"Address information: {address_text}")
+                except Exception as e:
+                    # Try to find any element with address-related text
+                    try:
+                        all_elements = self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Found') or contains(text(), 'address')]")
+                        if all_elements:
+                            for element in all_elements:
+                                if element.text.strip():
+                                    print(f"Found address-related text: {element.text.strip()}")
+                        else:
+                            print("No address information found on page")
+                    except Exception as e2:
+                        print(f"No address information found: {e}")
+                
+                return True
+            except Exception as e:
+                print(f"No alert found or error handling alert: {e}")
+                return False
+                
+        except Exception as e:
+            print(f"Error clicking BUY NOW button: {e}")
+            return False
+    
+    def click_address_and_place_order(self):
+        """Click on address area and handle order placement alert."""
+        try:
+            address_area = self.wait.until(EC.element_to_be_clickable(self.ADDRESS_AREA))
+            
+            # Scroll to the address area
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", address_area)
+            time.sleep(1)
+            
+            # Click the address area
+            self.driver.execute_script("arguments[0].click();", address_area)
+            print("Address area clicked successfully")
+            
+            # Wait for order placement alert
+            time.sleep(2)
+            try:
+                alert = self.driver.switch_to.alert
+                alert_text = alert.text
+                print(f"Order placement alert: {alert_text}")
+                alert.accept()
+                print("Order placement alert accepted successfully")
+                return True
+            except Exception as e:
+                print(f"No order placement alert found: {e}")
+                return False
+                
+        except Exception as e:
+            print(f"Error clicking address area: {e}")
+            return False

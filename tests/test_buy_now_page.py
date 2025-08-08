@@ -243,6 +243,26 @@ def get_buy_now_prices(buy_now_page):
         print("[FAIL] Failed to get BUY NOW button prices")
         return False
 
+def click_buy_now_button(buy_now_page):
+    """Click BUY NOW button and handle alert"""
+    print("[ACTION] Clicking BUY NOW button...")
+    if buy_now_page.click_buy_now_button():
+        print("[SUCCESS] BUY NOW button clicked and alert handled successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to click BUY NOW button or handle alert")
+        return False
+
+def click_address_and_place_order(buy_now_page):
+    """Click address area and handle order placement alert"""
+    print("[ACTION] Clicking address area to place order...")
+    if buy_now_page.click_address_and_place_order():
+        print("[SUCCESS] Address clicked and order placed successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to click address or handle order placement alert")
+        return False
+
 def click_write_review_and_fill_form(buy_now_page):
     """Click on write review button, fill form and submit"""
     print("[ACTION] Clicking write review button...")
@@ -347,6 +367,14 @@ def test_buy_now_page(driver):
     # Get BUY NOW button prices
     print("[STEP] Getting BUY NOW button prices...")
     get_buy_now_prices(buy_now_page)
+    
+    # Click BUY NOW button
+    print("[STEP] Clicking BUY NOW button...")
+    click_buy_now_button(buy_now_page)
+    
+    # Click address area to place order
+    print("[STEP] Clicking address area to place order...")
+    click_address_and_place_order(buy_now_page)
     
     print("[PASS] Buy now page test completed successfully")
     
