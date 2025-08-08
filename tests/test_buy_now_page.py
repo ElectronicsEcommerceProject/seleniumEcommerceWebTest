@@ -232,6 +232,17 @@ def calculate_and_compare_prices(buy_now_page):
         else:
             print("[FAIL] Failed to get web price information for comparison")
 
+def get_buy_now_prices(buy_now_page):
+    """Get BUY NOW button prices"""
+    print("[ACTION] Getting BUY NOW button prices...")
+    prices = buy_now_page.get_buy_now_button_prices()
+    if prices:
+        print("[SUCCESS] BUY NOW button prices retrieved successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to get BUY NOW button prices")
+        return False
+
 def click_write_review_and_fill_form(buy_now_page):
     """Click on write review button, fill form and submit"""
     print("[ACTION] Clicking write review button...")
@@ -332,6 +343,10 @@ def test_buy_now_page(driver):
         print("[SUCCESS] Complete review process completed successfully!")
     else:
         print("[FAIL] Review process failed")
+
+    # Get BUY NOW button prices
+    print("[STEP] Getting BUY NOW button prices...")
+    get_buy_now_prices(buy_now_page)
     
     print("[PASS] Buy now page test completed successfully")
     

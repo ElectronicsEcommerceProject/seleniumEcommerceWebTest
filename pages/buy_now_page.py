@@ -24,6 +24,7 @@ class BuyNowPage:
     REVIEW_TEXT_AREA = (By.XPATH, "//textarea[@placeholder='Share your experience with this product']")
     VARIANT_SELECT = (By.XPATH, "//select[contains(@class, 'w-full p-2 border')]")
     SUBMIT_REVIEW_BUTTON = (By.XPATH, "//button[contains(text(), 'Submit Review')]")
+    BUY_NOW_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-green-600') and .//div[text()='BUY NOW']]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -271,3 +272,39 @@ class BuyNowPage:
         except Exception as e:
             print(f"Error submitting review: {e}")
             return False
+    
+    def get_buy_now_button_prices(self):
+        """Extract saved amount and total price from BUY NOW button."""
+        try:
+            buy_now_button = self.wait.until(EC.presence_of_element_located(self.BUY_NOW_BUTTON))
+            
+            # Find the price container within the button
+            price_container = buy_now_button.find_element(By.XPATH, ".//div[@class='text-xs opacity-90']")
+            
+            # Extract original price (line-through)
+            original_price_element = price_container.find_element(By.XPATH, ".//span[@class='line-through']")
+            original_price = original_price_element.text.strip()
+            
+            # Extract discounted price
+            discounted_price_element = price_container.find_element(By.XPATH, ".//span[@class='ml-1']")
+            discounted_price = discounted_price_element.text.strip()
+            
+            # Calculate saved amount
+            original_value = float(original_price.replace('₹', '').replace(',', ''))
+            discounted_value = float(discounted_price.replace('₹', '').replace(',', ''))
+            saved_amount = original_value - discounted_value
+            
+            print(f"\n[INFO] BUY NOW Button Prices:")
+            print(f"  - Original Price: {original_price}")
+            print(f"  - Discounted Price: {discounted_price}")
+            print(f"  - Saved Amount: ₹{saved_amount:.2f}")
+            
+            return {
+                'original_price': original_price,
+                'discounted_price': discounted_price,
+                'saved_amount': f"₹{saved_amount:.2f}"
+            }
+            
+        except Exception as e:
+            print(f"Error getting BUY NOW button prices: {e}")
+            return None
