@@ -15,6 +15,7 @@ class MyOrderPage:
     # Filter section locators
     ORDER_STATUS_BUTTON = (By.XPATH, "//button[contains(text(), 'ORDER STATUS')]")
     ORDER_TIME_BUTTON = (By.XPATH, "//button[contains(text(), 'ORDER TIME')]")
+    CUSTOM_DATE_RANGE_BUTTON = (By.XPATH, "//button[contains(text(), 'CUSTOM DATE RANGE')]")
     FILTER_CHECKBOXES = (By.XPATH, "//label[contains(@class, 'text-gray-600')]//input[@type='checkbox']")
     PENDING_FILTER = (By.XPATH, "//label[contains(text(), 'Pending')]//input[@type='checkbox']")
     PROCESSING_FILTER = (By.XPATH, "//label[contains(text(), 'Processing')]//input[@type='checkbox']")
@@ -30,6 +31,11 @@ class MyOrderPage:
     YEAR_2022_FILTER = (By.XPATH, "//label[contains(text(), '2022')]//input[@type='checkbox']")
     YEAR_2021_FILTER = (By.XPATH, "//label[contains(text(), '2021')]//input[@type='checkbox']")
     OLDER_FILTER = (By.XPATH, "//label[contains(text(), 'Older')]//input[@type='checkbox']")
+    
+    # Custom date range elements
+    FROM_DATE_INPUT = (By.XPATH, "//label[contains(text(), 'From Date')]/following-sibling::input[@type='date']")
+    TO_DATE_INPUT = (By.XPATH, "//label[contains(text(), 'To Date')]/following-sibling::input[@type='date']")
+    CLEAR_DATE_RANGE_BUTTON = (By.XPATH, "//button[contains(text(), 'Clear Date Range')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -678,8 +684,119 @@ class MyOrderPage:
             print(f"[ERROR] Error testing {filter_name} filter: {e}")
             return False
     
+    def test_custom_date_range_filter(self):
+        """Test CUSTOM DATE RANGE filter functionality."""
+        try:
+            print("\n[INFO] ========== TESTING CUSTOM DATE RANGE FILTER ==========\n")
+            
+            # Expand CUSTOM DATE RANGE filter
+            print("[ACTION] Expanding CUSTOM DATE RANGE filter dropdown...")
+            custom_date_button = self.wait.until(EC.presence_of_element_located(self.CUSTOM_DATE_RANGE_BUTTON))
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", custom_date_button)
+            time.sleep(1)
+            self.driver.execute_script("arguments[0].click();", custom_date_button)
+            time.sleep(3)
+            
+            # Test with specific date range that has orders
+            from_date = "2025-08-08"
+            to_date = "2025-08-09"
+            
+            print(f"[ACTION] Testing date range: {from_date} to {to_date}")
+            
+            # Set From Date using JavaScript
+            from_date_input = self.wait.until(EC.presence_of_element_located(self.FROM_DATE_INPUT))
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", from_date_input)
+            time.sleep(1)
+            # Use JavaScript to set the value directly
+            self.driver.execute_script(f"arguments[0].value = '{from_date}';", from_date_input)
+            # Trigger change event
+            self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", from_date_input)
+            print(f"[SUCCESS] Set From Date: {from_date}")
+            
+            # Set To Date using JavaScript
+            to_date_input = self.wait.until(EC.presence_of_element_located(self.TO_DATE_INPUT))
+            # Use JavaScript to set the value directly
+            self.driver.execute_script(f"arguments[0].value = '{to_date}';", to_date_input)
+            # Trigger change event
+            self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", to_date_input)
+            print(f"[SUCCESS] Set To Date: {to_date}")
+            
+            # Trigger any additional events to ensure filter applies
+            self.driver.execute_script("arguments[0].blur();", to_date_input)
+            time.sleep(3)  # Wait for filter to apply
+            
+            # Get expected count from showing text with retry
+            shown_count, total_count = self.get_total_orders_from_text()
+            
+            # If showing text not available, try alternative method
+            if total_count == 0:
+                time.sleep(1)
+                shown_count, total_count = self.get_total_orders_from_text()
+            
+            # Try to get count from Load More button text if available
+            if total_count == 0:
+                try:
+                    load_more_button = self.driver.find_element(*self.LOAD_MORE_BUTTON)
+                    button_text = load_more_button.text.strip()
+                    import re
+                    match = re.search(r'\((\d+) remaining\)', button_text)
+                    if match:
+                        remaining = int(match.group(1))
+                        current_visible = self.count_visible_orders()
+                        total_count = current_visible + remaining
+                        print(f"[INFO] Custom date range filter result: {current_visible} visible + {remaining} remaining = {total_count} total orders")
+                except:
+                    pass
+            
+            if shown_count > 0 and total_count > 0:
+                print(f"[INFO] Custom date range filter result: Showing {shown_count} of {total_count} orders")
+            elif total_count > 0:
+                print(f"[INFO] Custom date range filter result: Total {total_count} orders expected")
+            
+            # Count initial orders and load more if needed
+            initial_count = self.count_visible_orders()
+            load_more_clicks = 0
+            
+            while self.check_load_more_button_present():
+                if self.click_load_more_button():
+                    load_more_clicks += 1
+                    self.wait_for_new_orders_to_load()
+                else:
+                    break
+            
+            final_count = self.count_visible_orders()
+            
+            if load_more_clicks > 0:
+                print(f"[INFO] Clicked Load More {load_more_clicks} times for custom date range filter")
+            
+            print(f"[SUCCESS] Found {final_count} orders for custom date range filter ({from_date} to {to_date})")
+            
+            # Compare expected vs actual count
+            if total_count > 0:
+                if final_count == total_count:
+                    print(f"[SUCCESS] Total custom date range orders is equal - Expected: {total_count}, Found: {final_count}")
+                else:
+                    print(f"[FAIL] Total custom date range orders mismatch - Expected: {total_count}, Found: {final_count}")
+            else:
+                print(f"[INFO] Could not get expected count for custom date range filter - Found {final_count} orders total")
+            
+            # Clear date range
+            try:
+                clear_button = self.driver.find_element(*self.CLEAR_DATE_RANGE_BUTTON)
+                self.driver.execute_script("arguments[0].click();", clear_button)
+                print("[SUCCESS] Cleared custom date range filter")
+                time.sleep(2)
+            except:
+                print("[INFO] Could not find clear date range button")
+            
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] Error testing custom date range filter: {e}")
+            return False
+    
     def test_all_filters(self):
-        """Test both ORDER STATUS and ORDER TIME filters."""
+        """Test ORDER STATUS, ORDER TIME, and CUSTOM DATE RANGE filters."""
         print("[INFO] ========== TESTING ALL FILTER CHECKBOXES ==========\n")
         
         # Test ORDER STATUS filters
@@ -687,3 +804,6 @@ class MyOrderPage:
         
         # Test ORDER TIME filters
         self.test_all_time_filter_checkboxes()
+        
+        # Test CUSTOM DATE RANGE filter
+        self.test_custom_date_range_filter()
