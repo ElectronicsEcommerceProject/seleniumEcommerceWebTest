@@ -12,6 +12,15 @@ class MyOrderPage:
     ORDER_ITEMS_SHOWN_ON_PAGE = (By.XPATH, "//p[contains(@class, 'text-sm text-gray-600') and contains(text(), 'Showing')]")
     SEARCH_BOX = (By.XPATH, "//input[@placeholder='🔍 Search orders (auto-search after 1.5s)...']")
     
+    # Filter section locators
+    ORDER_STATUS_BUTTON = (By.XPATH, "//button[contains(text(), 'ORDER STATUS')]")
+    FILTER_CHECKBOXES = (By.XPATH, "//input[@type='checkbox']")
+    PENDING_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='pending']")
+    CONFIRMED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='confirmed']")
+    SHIPPED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='shipped']")
+    DELIVERED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='delivered']")
+    CANCELLED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='cancelled']")
+    
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
@@ -279,3 +288,113 @@ class MyOrderPage:
         except Exception as e:
             print(f"[ERROR] Error validating all orders loaded: {e}")
             return False
+    
+    def tick_pending_filter_checkbox(self):
+        """Tick only the first filter checkbox (Pending)."""
+        try:
+            print("[ACTION] Finding and ticking Pending filter checkbox...")
+            
+            # First, click the ORDER STATUS button to expand filters
+            print("[STEP] Looking for ORDER STATUS button to expand filters...")
+            try:
+                order_status_button = self.wait.until(EC.presence_of_element_located(self.ORDER_STATUS_BUTTON))
+                # Scroll to make button visible
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", order_status_button)
+                time.sleep(1)
+                # Use JavaScript click to avoid interception
+                self.driver.execute_script("arguments[0].click();", order_status_button)
+                print("[SUCCESS] Clicked ORDER STATUS button to expand filters")
+                time.sleep(2)  # Wait for filters to expand
+            except Exception as e:
+                print(f"[ERROR] Could not find or click ORDER STATUS button: {e}")
+                return False
+            
+            # Now find and tick only the first checkbox (Pending)
+            print("[STEP] Looking for Pending filter checkbox...")
+            checkboxes = self.driver.find_elements(*self.FILTER_CHECKBOXES)
+            
+            if not checkboxes:
+                print("[INFO] No filter checkboxes found after expanding")
+                return False
+            
+            print(f"[INFO] Found {len(checkboxes)} filter checkboxes")
+            
+            # Click only the first checkbox (Pending)
+            try:
+                first_checkbox = checkboxes[0]
+                if first_checkbox.is_displayed() and not first_checkbox.is_selected():
+                    # Scroll to checkbox and click
+                    self.driver.execute_script("arguments[0].scrollIntoView(true);", first_checkbox)
+                    time.sleep(0.3)
+                    first_checkbox.click()
+                    print("[SUCCESS] Ticked Pending filter checkbox")
+                    time.sleep(2)  # Wait for filter to apply
+                    
+                    # Count orders and load more if needed
+                    self._count_and_load_filtered_orders()
+                    
+                    return True
+                elif first_checkbox.is_selected():
+                    print("[INFO] Pending checkbox already selected")
+                    
+                    # Count orders and load more if needed
+                    self._count_and_load_filtered_orders()
+                    
+                    return True
+                else:
+                    print("[INFO] Pending checkbox not visible")
+                    return False
+            except Exception as e:
+                print(f"[ERROR] Failed to tick Pending checkbox: {e}")
+                return False
+            
+        except Exception as e:
+            print(f"[ERROR] Error ticking Pending filter checkbox: {e}")
+            return False
+    
+    def _count_and_load_filtered_orders(self):
+        """Count filtered orders and load more if available."""
+        try:
+            # Get initial count
+            initial_count = self.count_visible_orders()
+            print(f"[INFO] Initial filtered orders count: {initial_count}")
+            
+            # Print the filtered order count from text
+            shown_count, total_count = self.get_total_orders_from_text()
+            if shown_count > 0 and total_count > 0:
+                print(f"[INFO] Pending filter applied: Showing {shown_count} of {total_count} orders")
+            
+            current_count = initial_count
+            
+            # Load more orders if Load More button is available
+            while self.check_load_more_button_present():
+                print("[ACTION] Load More button found for filtered orders - clicking...")
+                if self.click_load_more_button():
+                    self.wait_for_new_orders_to_load()
+                    new_count = self.count_visible_orders()
+                    if new_count > current_count:
+                        current_count = new_count
+                        print(f"[INFO] Loaded more filtered orders. Current count: {current_count}")
+                    else:
+                        print("[INFO] No new filtered orders loaded")
+                        break
+                else:
+                    print("[INFO] Failed to click Load More button")
+                    break
+            
+            print(f"[SUCCESS] Total Pending orders loaded: {current_count}")
+            
+            # Compare total_count from text with actual loaded count
+            if total_count > 0:
+                if current_count == total_count:
+                    print(f"[SUCCESS] Pending filter validation PASSED: Expected {total_count} orders, loaded {current_count} orders")
+                else:
+                    print(f"[FAIL] Pending filter validation FAILED: Expected {total_count} orders, but loaded {current_count} orders")
+            else:
+                print(f"[INFO] Could not validate filter - no total count available from text")
+            
+            return current_count
+            
+        except Exception as e:
+            print(f"[ERROR] Error counting and loading filtered orders: {e}")
+            return 0

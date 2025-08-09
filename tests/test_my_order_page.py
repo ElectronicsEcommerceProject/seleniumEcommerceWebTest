@@ -137,6 +137,21 @@ def click_load_more_and_validate(my_order_page):
         print("[FAIL] Failed to click Load More button")
         return False
 
+def run_filter_checkbox_tests(my_order_page):
+    """Test filter checkbox functionality"""
+    print("\n[INFO] ========== TESTING FILTER CHECKBOXES ==========\n")
+    
+    # Test ticking Pending filter checkbox
+    filter_result = my_order_page.tick_pending_filter_checkbox()
+    
+    if filter_result:
+        print("[SUCCESS] Pending filter checkbox tested successfully!")
+    else:
+        print("[INFO] Pending filter checkbox testing completed")
+    
+    print("\n[INFO] ========== FILTER TESTING COMPLETE ==========\n")
+    return filter_result
+
 def run_search_functionality_tests(my_order_page):
     """Test order search functionality"""
     print("\n[INFO] ========== TESTING SEARCH FUNCTIONALITY ==========\n")
@@ -207,10 +222,10 @@ def test_my_order_page(driver):
     # Step 2: Load all orders first
     load_all_orders(my_order_page)
     
-    # Step 3: Test search functionality with all orders loaded
-    run_search_functionality_tests(my_order_page)
+    # Step 3: Test filter checkboxes
+    run_filter_checkbox_tests(my_order_page)
     
-    # Step 2-4: Repeat Load More process until no more orders
+    # Step 4: Repeat Load More process until no more orders
     while True:
         # Check for Load More button
         if not check_load_more_button(my_order_page):
@@ -224,5 +239,8 @@ def test_my_order_page(driver):
     
     # Step 5: Display final results
     display_final_results(my_order_page)
+    
+    # Step 6: Test search functionality at the end
+    run_search_functionality_tests(my_order_page)
     
     print("[PASS] My order page test completed successfully")
