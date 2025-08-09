@@ -141,8 +141,8 @@ def run_filter_checkbox_tests(my_order_page):
     """Test filter checkbox functionality"""
     print("\n[INFO] ========== TESTING ALL FILTER CHECKBOXES ==========\n")
     
-    # Test all filter checkboxes
-    my_order_page.test_all_filter_checkboxes()
+    # Test all filter checkboxes (both ORDER STATUS and ORDER TIME)
+    my_order_page.test_all_filters()
     
     print("\n[INFO] ========== ALL FILTER TESTING COMPLETE ==========\n")
     return True

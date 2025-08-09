@@ -14,6 +14,7 @@ class MyOrderPage:
     
     # Filter section locators
     ORDER_STATUS_BUTTON = (By.XPATH, "//button[contains(text(), 'ORDER STATUS')]")
+    ORDER_TIME_BUTTON = (By.XPATH, "//button[contains(text(), 'ORDER TIME')]")
     FILTER_CHECKBOXES = (By.XPATH, "//label[contains(@class, 'text-gray-600')]//input[@type='checkbox']")
     PENDING_FILTER = (By.XPATH, "//label[contains(text(), 'Pending')]//input[@type='checkbox']")
     PROCESSING_FILTER = (By.XPATH, "//label[contains(text(), 'Processing')]//input[@type='checkbox']")
@@ -21,6 +22,14 @@ class MyOrderPage:
     DELIVERED_FILTER = (By.XPATH, "//label[contains(text(), 'Delivered')]//input[@type='checkbox']")
     CANCELLED_FILTER = (By.XPATH, "//label[contains(text(), 'Cancelled')]//input[@type='checkbox']")
     RETURNED_FILTER = (By.XPATH, "//label[contains(text(), 'Returned')]//input[@type='checkbox']")
+    
+    # Time filter checkboxes
+    LAST_30_DAYS_FILTER = (By.XPATH, "//label[contains(text(), 'Last 30 days')]//input[@type='checkbox']")
+    YEAR_2024_FILTER = (By.XPATH, "//label[contains(text(), '2024')]//input[@type='checkbox']")
+    YEAR_2023_FILTER = (By.XPATH, "//label[contains(text(), '2023')]//input[@type='checkbox']")
+    YEAR_2022_FILTER = (By.XPATH, "//label[contains(text(), '2022')]//input[@type='checkbox']")
+    YEAR_2021_FILTER = (By.XPATH, "//label[contains(text(), '2021')]//input[@type='checkbox']")
+    OLDER_FILTER = (By.XPATH, "//label[contains(text(), 'Older')]//input[@type='checkbox']")
     
     def __init__(self, driver):
         self.driver = driver
@@ -497,17 +506,19 @@ class MyOrderPage:
             return 0
     
     def test_all_filter_checkboxes(self):
-        """Test all filter checkboxes one by one."""
+        """Test all ORDER STATUS filter checkboxes one by one."""
         try:
-            # Expand filters ONCE and keep open
-            print("[ACTION] Expanding filter dropdown...")
+            print("[INFO] ========== TESTING ORDER STATUS FILTERS ==========\n")
+            
+            # Expand ORDER STATUS filters ONCE and keep open
+            print("[ACTION] Expanding ORDER STATUS filter dropdown...")
             order_status_button = self.wait.until(EC.presence_of_element_located(self.ORDER_STATUS_BUTTON))
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", order_status_button)
             time.sleep(1)
             self.driver.execute_script("arguments[0].click();", order_status_button)
             time.sleep(3)
             
-            # Find all filter labels
+            # Find all ORDER STATUS filter labels
             filter_labels = self.driver.find_elements(By.XPATH, "//label[contains(@class, 'text-gray-600')]")
             available_filters = []
             
@@ -519,16 +530,57 @@ class MyOrderPage:
                 except:
                     continue
             
-            print(f"[INFO] Found available filters: {available_filters}")
+            print(f"[INFO] Found available ORDER STATUS filters: {available_filters}")
             
-            # Test each filter without re-expanding dropdown
+            # Test each ORDER STATUS filter without re-expanding dropdown
             for filter_name in available_filters:
                 print(f"\n[INFO] ========== TESTING {filter_name.upper()} FILTER ==========\n")
                 self.test_single_filter(filter_name)
                 time.sleep(1)
                 
         except Exception as e:
-            print(f"[ERROR] Error testing filters: {e}")
+            print(f"[ERROR] Error testing ORDER STATUS filters: {e}")
+    
+    def test_all_time_filter_checkboxes(self):
+        """Test all ORDER TIME filter checkboxes one by one."""
+        try:
+            print("\n[INFO] ========== TESTING ORDER TIME FILTERS ==========\n")
+            
+            # Expand ORDER TIME filters ONCE and keep open
+            print("[ACTION] Expanding ORDER TIME filter dropdown...")
+            order_time_button = self.wait.until(EC.presence_of_element_located(self.ORDER_TIME_BUTTON))
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", order_time_button)
+            time.sleep(1)
+            self.driver.execute_script("arguments[0].click();", order_time_button)
+            time.sleep(3)
+            
+            # Find all ORDER TIME filter labels
+            time_filter_labels = self.driver.find_elements(By.XPATH, "//label[contains(@class, 'text-gray-600')]")
+            available_time_filters = []
+            
+            for label in time_filter_labels:
+                try:
+                    filter_text = label.text.strip()
+                    # Only include time-related filters
+                    if filter_text and filter_text not in available_time_filters and (
+                        'Last 30 days' in filter_text or 
+                        filter_text.isdigit() or 
+                        'Older' in filter_text
+                    ):
+                        available_time_filters.append(filter_text)
+                except:
+                    continue
+            
+            print(f"[INFO] Found available ORDER TIME filters: {available_time_filters}")
+            
+            # Test each ORDER TIME filter without re-expanding dropdown
+            for filter_name in available_time_filters:
+                print(f"\n[INFO] ========== TESTING {filter_name.upper()} TIME FILTER ==========\n")
+                self.test_single_filter(filter_name)
+                time.sleep(1)
+                
+        except Exception as e:
+            print(f"[ERROR] Error testing ORDER TIME filters: {e}")
     
     def test_single_filter(self, filter_name):
         """Test a single filter without expanding dropdown."""
@@ -625,3 +677,13 @@ class MyOrderPage:
         except Exception as e:
             print(f"[ERROR] Error testing {filter_name} filter: {e}")
             return False
+    
+    def test_all_filters(self):
+        """Test both ORDER STATUS and ORDER TIME filters."""
+        print("[INFO] ========== TESTING ALL FILTER CHECKBOXES ==========\n")
+        
+        # Test ORDER STATUS filters
+        self.test_all_filter_checkboxes()
+        
+        # Test ORDER TIME filters
+        self.test_all_time_filter_checkboxes()
