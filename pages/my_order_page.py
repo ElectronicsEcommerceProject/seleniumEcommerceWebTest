@@ -37,6 +37,12 @@ class MyOrderPage:
     TO_DATE_INPUT = (By.XPATH, "//label[contains(text(), 'To Date')]/following-sibling::input[@type='date']")
     CLEAR_DATE_RANGE_BUTTON = (By.XPATH, "//button[contains(text(), 'Clear Date Range')]")
     
+    # Cancel Complete Order button
+    CANCEL_COMPLETE_ORDER_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-red-600') and contains(text(), 'Cancel Complete Order')]")
+    
+    # Show Items button
+    SHOW_ITEMS_BUTTON = (By.XPATH, "//span[contains(text(), 'Show Items')]/parent::div")
+    
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
@@ -807,3 +813,92 @@ class MyOrderPage:
         
         # Test CUSTOM DATE RANGE filter
         self.test_custom_date_range_filter()
+    
+    def cancel_complete_order_button_click(self):
+        """Click the Cancel Complete Order button and handle confirmation alerts."""
+        try:
+            print("[ACTION] Looking for Cancel Complete Order button...")
+            
+            # Apply Pending filter first to show only pending orders
+            print("[ACTION] Applying Pending filter to show pending orders...")
+            try:
+                # Expand ORDER STATUS filters
+                order_status_button = self.wait.until(EC.presence_of_element_located(self.ORDER_STATUS_BUTTON))
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", order_status_button)
+                time.sleep(1)
+                self.driver.execute_script("arguments[0].click();", order_status_button)
+                time.sleep(2)
+                
+                # Click Pending filter checkbox
+                pending_checkbox = self.wait.until(EC.presence_of_element_located(self.PENDING_FILTER))
+                if not pending_checkbox.is_selected():
+                    self.driver.execute_script("arguments[0].click();", pending_checkbox)
+                    print("[SUCCESS] Applied Pending filter")
+                    time.sleep(5)  # Wait longer for filter to apply and orders to load
+                else:
+                    print("[INFO] Pending filter already applied")
+                    time.sleep(3)  # Still wait for orders to be ready
+            except Exception as e:
+                print(f"[WARNING] Could not apply Pending filter: {e}")
+            
+            # Click Show Items button in the first order
+            print("[ACTION] Looking for Show Items button in first order...")
+            try:
+                show_items_button = self.wait.until(EC.presence_of_element_located(self.SHOW_ITEMS_BUTTON))
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", show_items_button)
+                time.sleep(1)
+                self.driver.execute_script("arguments[0].click();", show_items_button)
+                print("[SUCCESS] Clicked Show Items button")
+                time.sleep(2)  # Wait for items to expand
+            except Exception as e:
+                print(f"[WARNING] Could not find or click Show Items button: {e}")
+            
+            # Find the Cancel Complete Order button
+            cancel_button = self.wait.until(EC.presence_of_element_located(self.CANCEL_COMPLETE_ORDER_BUTTON))
+            
+            # Scroll to the button to make it visible
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", cancel_button)
+            time.sleep(1)
+            
+            # Check if button is clickable
+            if cancel_button.is_displayed() and cancel_button.is_enabled():
+                # Click the button using JavaScript to avoid interception
+                self.driver.execute_script("arguments[0].click();", cancel_button)
+                print("[SUCCESS] Cancel Complete Order button clicked successfully")
+                
+                # Handle first alert: "Are you sure you want to cancel this order?"
+                try:
+                    print("[INFO] Waiting for confirmation alert...")
+                    WebDriverWait(self.driver, 5).until(EC.alert_is_present())
+                    alert1 = self.driver.switch_to.alert
+                    alert_text = alert1.text
+                    print(f"[INFO] First alert text: '{alert_text}'")
+                    alert1.accept()  # Click OK
+                    print("[SUCCESS] Clicked OK on confirmation alert")
+                    
+                    # Handle second alert: "Order cancelled successfully!"
+                    try:
+                        print("[INFO] Waiting for success alert...")
+                        WebDriverWait(self.driver, 5).until(EC.alert_is_present())
+                        alert2 = self.driver.switch_to.alert
+                        success_text = alert2.text
+                        print(f"[INFO] Success alert text: '{success_text}'")
+                        alert2.accept()  # Click OK
+                        print("[SUCCESS] The order got canceled")
+                        return True
+                        
+                    except Exception as e:
+                        print(f"[ERROR] Could not handle success alert: {e}")
+                        return False
+                        
+                except Exception as e:
+                    print(f"[ERROR] Could not handle confirmation alert: {e}")
+                    return False
+                    
+            else:
+                print("[INFO] Cancel Complete Order button is not clickable")
+                return False
+                
+        except Exception as e:
+            print(f"[ERROR] Could not find or click Cancel Complete Order button: {e}")
+            return False

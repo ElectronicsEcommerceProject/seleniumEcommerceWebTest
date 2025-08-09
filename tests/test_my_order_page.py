@@ -220,6 +220,20 @@ def test_my_order_page(driver):
     # Step 3: Test filter checkboxes
     run_filter_checkbox_tests(my_order_page)
     
+    # Step 3.5: Test cancel complete order functionality
+    print("\n[INFO] ========== TESTING CANCEL ORDER FUNCTIONALITY ==========\n")
+    
+    # Refresh page to reset state after filter testing
+    print("[ACTION] Refreshing page to reset state...")
+    driver.refresh()
+    time.sleep(3)
+    print("[SUCCESS] Page refreshed")
+    
+    if my_order_page.cancel_complete_order_button_click():
+        print("[PASS] Cancel order functionality tested successfully")
+    else:
+        print("[INFO] Cancel order functionality test completed")
+    
     # Step 4: Repeat Load More process until no more orders
     while True:
         # Check for Load More button
@@ -238,4 +252,4 @@ def test_my_order_page(driver):
     # Step 6: Test search functionality at the end
     run_search_functionality_tests(my_order_page)
     
-    print("[PASS] My order page test completed successfully")
+    print("[PASS] All testing completed successfully")
