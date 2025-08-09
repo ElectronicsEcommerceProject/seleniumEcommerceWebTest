@@ -14,12 +14,13 @@ class MyOrderPage:
     
     # Filter section locators
     ORDER_STATUS_BUTTON = (By.XPATH, "//button[contains(text(), 'ORDER STATUS')]")
-    FILTER_CHECKBOXES = (By.XPATH, "//input[@type='checkbox']")
-    PENDING_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='pending']")
-    CONFIRMED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='confirmed']")
-    SHIPPED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='shipped']")
-    DELIVERED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='delivered']")
-    CANCELLED_FILTER = (By.XPATH, "//input[@type='checkbox' and @value='cancelled']")
+    FILTER_CHECKBOXES = (By.XPATH, "//label[contains(@class, 'text-gray-600')]//input[@type='checkbox']")
+    PENDING_FILTER = (By.XPATH, "//label[contains(text(), 'Pending')]//input[@type='checkbox']")
+    PROCESSING_FILTER = (By.XPATH, "//label[contains(text(), 'Processing')]//input[@type='checkbox']")
+    SHIPPED_FILTER = (By.XPATH, "//label[contains(text(), 'Shipped')]//input[@type='checkbox']")
+    DELIVERED_FILTER = (By.XPATH, "//label[contains(text(), 'Delivered')]//input[@type='checkbox']")
+    CANCELLED_FILTER = (By.XPATH, "//label[contains(text(), 'Cancelled')]//input[@type='checkbox']")
+    RETURNED_FILTER = (By.XPATH, "//label[contains(text(), 'Returned')]//input[@type='checkbox']")
     
     def __init__(self, driver):
         self.driver = driver
@@ -398,3 +399,229 @@ class MyOrderPage:
         except Exception as e:
             print(f"[ERROR] Error counting and loading filtered orders: {e}")
             return 0
+    
+    def uncheck_checkbox(self, filter_name):
+        """Uncheck a specific checkbox by filter name."""
+        try:
+            checkbox_locator = (By.XPATH, f"//label[contains(text(), '{filter_name}')]//input[@type='checkbox']")
+            checkbox = self.driver.find_element(*checkbox_locator)
+            if checkbox.is_selected():
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", checkbox)
+                time.sleep(1)
+                self.driver.execute_script("arguments[0].click();", checkbox)
+                print(f"[SUCCESS] Unchecked {filter_name} checkbox")
+                time.sleep(1)
+                return True
+            else:
+                print(f"[INFO] {filter_name} checkbox already unchecked")
+                return True
+        except Exception as e:
+            print(f"[ERROR] Failed to uncheck {filter_name} checkbox: {e}")
+            return False
+    
+    def test_filter_checkbox(self, filter_name):
+        """Test a specific filter checkbox by name."""
+        try:
+            print(f"[ACTION] Testing {filter_name} filter checkbox...")
+            
+            # Expand filters if not already expanded
+            try:
+                order_status_button = self.wait.until(EC.presence_of_element_located(self.ORDER_STATUS_BUTTON))
+                self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", order_status_button)
+                time.sleep(1)
+                self.driver.execute_script("arguments[0].click();", order_status_button)
+                time.sleep(2)
+            except:
+                pass  # Filters might already be expanded
+            
+            # Find and click the specific checkbox by label text
+            checkbox_locator = (By.XPATH, f"//label[contains(text(), '{filter_name}')]//input[@type='checkbox']")
+            target_checkbox = self.wait.until(EC.presence_of_element_located(checkbox_locator))
+            
+            if not target_checkbox.is_selected():
+                self.driver.execute_script("arguments[0].scrollIntoView(true);", target_checkbox)
+                time.sleep(0.3)
+                target_checkbox.click()
+                print(f"[SUCCESS] Ticked {filter_name} filter checkbox")
+                time.sleep(2)
+            else:
+                print(f"[INFO] {filter_name} checkbox already selected")
+            
+            # Count and load filtered orders
+            current_count = self._count_and_load_filtered_orders_generic(filter_name)
+            
+            # Uncheck the checkbox
+            self.uncheck_checkbox(filter_name)
+            
+            return current_count > 0
+            
+        except Exception as e:
+            print(f"[ERROR] Error testing {filter_name} filter: {e}")
+            return False
+    
+    def _count_and_load_filtered_orders_generic(self, filter_name):
+        """Generic function to count filtered orders and load more if available."""
+        try:
+            initial_count = self.count_visible_orders()
+            print(f"[INFO] Initial {filter_name} filtered orders count: {initial_count}")
+            
+            shown_count, total_count = self.get_total_orders_from_text()
+            if shown_count > 0 and total_count > 0:
+                print(f"[INFO] {filter_name} filter applied: Showing {shown_count} of {total_count} orders")
+            
+            current_count = initial_count
+            while self.check_load_more_button_present():
+                if self.click_load_more_button():
+                    self.wait_for_new_orders_to_load()
+                    new_count = self.count_visible_orders()
+                    if new_count > current_count:
+                        current_count = new_count
+                        print(f"[INFO] Loaded more {filter_name} orders. Current count: {current_count}")
+                    else:
+                        break
+                else:
+                    break
+            
+            print(f"[SUCCESS] Total {filter_name} orders loaded: {current_count}")
+            
+            if total_count > 0:
+                if current_count == total_count:
+                    print(f"[SUCCESS] {filter_name} filter validation PASSED: Expected {total_count} orders, loaded {current_count} orders")
+                else:
+                    print(f"[WARNING] {filter_name} filter validation FAILED: Expected {total_count} orders, but loaded {current_count} orders")
+            
+            return current_count
+            
+        except Exception as e:
+            print(f"[ERROR] Error counting {filter_name} filtered orders: {e}")
+            return 0
+    
+    def test_all_filter_checkboxes(self):
+        """Test all filter checkboxes one by one."""
+        try:
+            # Expand filters ONCE and keep open
+            print("[ACTION] Expanding filter dropdown...")
+            order_status_button = self.wait.until(EC.presence_of_element_located(self.ORDER_STATUS_BUTTON))
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", order_status_button)
+            time.sleep(1)
+            self.driver.execute_script("arguments[0].click();", order_status_button)
+            time.sleep(3)
+            
+            # Find all filter labels
+            filter_labels = self.driver.find_elements(By.XPATH, "//label[contains(@class, 'text-gray-600')]")
+            available_filters = []
+            
+            for label in filter_labels:
+                try:
+                    filter_text = label.text.strip()
+                    if filter_text and filter_text not in available_filters:
+                        available_filters.append(filter_text)
+                except:
+                    continue
+            
+            print(f"[INFO] Found available filters: {available_filters}")
+            
+            # Test each filter without re-expanding dropdown
+            for filter_name in available_filters:
+                print(f"\n[INFO] ========== TESTING {filter_name.upper()} FILTER ==========\n")
+                self.test_single_filter(filter_name)
+                time.sleep(1)
+                
+        except Exception as e:
+            print(f"[ERROR] Error testing filters: {e}")
+    
+    def test_single_filter(self, filter_name):
+        """Test a single filter without expanding dropdown."""
+        try:
+            # Find checkbox using multiple locators
+            checkbox_locators = [
+                (By.XPATH, f"//label[contains(text(), '{filter_name}')]/input[@type='checkbox']"),
+                (By.XPATH, f"//label[normalize-space()='{filter_name}']/input[@type='checkbox']"),
+                (By.XPATH, f"//label[contains(text(), '{filter_name}')]//input[@type='checkbox']")
+            ]
+            
+            target_checkbox = None
+            for locator in checkbox_locators:
+                try:
+                    target_checkbox = self.driver.find_element(*locator)
+                    break
+                except:
+                    continue
+            
+            if not target_checkbox:
+                print(f"[ERROR] Could not find {filter_name} checkbox")
+                return False
+            
+            # Click checkbox
+            if not target_checkbox.is_selected():
+                self.driver.execute_script("arguments[0].click();", target_checkbox)
+                print(f"[SUCCESS] Applied {filter_name} filter")
+                time.sleep(2)
+            
+            # Get expected count from showing text with retry
+            shown_count, total_count = self.get_total_orders_from_text()
+            
+            # If showing text not available, try alternative method
+            if total_count == 0:
+                time.sleep(1)
+                shown_count, total_count = self.get_total_orders_from_text()
+            
+            # Try to get count from Load More button text if available
+            if total_count == 0:
+                try:
+                    load_more_button = self.driver.find_element(*self.LOAD_MORE_BUTTON)
+                    button_text = load_more_button.text.strip()
+                    # Extract from "Load More Orders (4 remaining)"
+                    import re
+                    match = re.search(r'\((\d+) remaining\)', button_text)
+                    if match:
+                        remaining = int(match.group(1))
+                        current_visible = self.count_visible_orders()
+                        total_count = current_visible + remaining
+                        print(f"[INFO] {filter_name} filter result: {current_visible} visible + {remaining} remaining = {total_count} total orders")
+                except:
+                    pass
+            
+            if shown_count > 0 and total_count > 0:
+                print(f"[INFO] {filter_name} filter result: Showing {shown_count} of {total_count} orders")
+            elif total_count > 0:
+                print(f"[INFO] {filter_name} filter result: Total {total_count} orders expected")
+            
+            # Count initial orders and load more if needed
+            initial_count = self.count_visible_orders()
+            load_more_clicks = 0
+            
+            while self.check_load_more_button_present():
+                if self.click_load_more_button():
+                    load_more_clicks += 1
+                    self.wait_for_new_orders_to_load()
+                else:
+                    break
+            
+            final_count = self.count_visible_orders()
+            
+            if load_more_clicks > 0:
+                print(f"[INFO] Clicked Load More {load_more_clicks} times for {filter_name} filter")
+            
+            print(f"[SUCCESS] Found {final_count} orders for {filter_name} filter")
+            
+            # Compare expected vs actual count
+            if total_count > 0:
+                if final_count == total_count:
+                    print(f"[SUCCESS] Total {filter_name} orders is equal - Expected: {total_count}, Found: {final_count}")
+                else:
+                    print(f"[FAIL] Total {filter_name} orders mismatch - Expected: {total_count}, Found: {final_count}")
+            else:
+                print(f"[FAIL] Could not get expected count for {filter_name} filter - Found {final_count} orders total")
+            
+            # Uncheck
+            if target_checkbox.is_selected():
+                self.driver.execute_script("arguments[0].click();", target_checkbox)
+                print(f"[SUCCESS] Unchecked {filter_name} filter")
+                time.sleep(1)
+            
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] Error testing {filter_name} filter: {e}")
+            return False

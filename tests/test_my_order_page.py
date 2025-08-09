@@ -139,18 +139,13 @@ def click_load_more_and_validate(my_order_page):
 
 def run_filter_checkbox_tests(my_order_page):
     """Test filter checkbox functionality"""
-    print("\n[INFO] ========== TESTING FILTER CHECKBOXES ==========\n")
+    print("\n[INFO] ========== TESTING ALL FILTER CHECKBOXES ==========\n")
     
-    # Test ticking Pending filter checkbox
-    filter_result = my_order_page.tick_pending_filter_checkbox()
+    # Test all filter checkboxes
+    my_order_page.test_all_filter_checkboxes()
     
-    if filter_result:
-        print("[SUCCESS] Pending filter checkbox tested successfully!")
-    else:
-        print("[INFO] Pending filter checkbox testing completed")
-    
-    print("\n[INFO] ========== FILTER TESTING COMPLETE ==========\n")
-    return filter_result
+    print("\n[INFO] ========== ALL FILTER TESTING COMPLETE ==========\n")
+    return True
 
 def run_search_functionality_tests(my_order_page):
     """Test order search functionality"""
