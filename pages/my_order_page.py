@@ -43,6 +43,9 @@ class MyOrderPage:
     # Show Items button
     SHOW_ITEMS_BUTTON = (By.XPATH, "//span[contains(text(), 'Show Items')]/parent::div")
     
+    # Order number in first order
+    ORDER_NUMBER = (By.XPATH, "//h4[contains(@class, 'text-base font-semibold text-gray-800') and contains(text(), 'Order #')]")
+    
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
@@ -841,6 +844,14 @@ class MyOrderPage:
             except Exception as e:
                 print(f"[WARNING] Could not apply Pending filter: {e}")
             
+            # Get order number but don't print yet
+            order_number = None
+            try:
+                order_number_element = self.wait.until(EC.presence_of_element_located(self.ORDER_NUMBER))
+                order_number = order_number_element.text.strip()
+            except Exception as e:
+                print(f"[WARNING] Could not find order number: {e}")
+            
             # Click Show Items button in the first order
             print("[ACTION] Looking for Show Items button in first order...")
             try:
@@ -885,6 +896,9 @@ class MyOrderPage:
                         print(f"[INFO] Success alert text: '{success_text}'")
                         alert2.accept()  # Click OK
                         print("[SUCCESS] The order got canceled")
+                        # Print order number only if cancellation was successful
+                        if order_number:
+                            print(f"[INFO] Successfully cancelled: {order_number}")
                         return True
                         
                     except Exception as e:
