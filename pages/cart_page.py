@@ -38,6 +38,8 @@ class CartPage:
     ORIGINAL_PRICE = (By.XPATH, "//span[contains(@class, 'line-through')]")
     SAVINGS_AMOUNT = (By.XPATH, "//span[contains(@class, 'text-green-600') and contains(text(), 'Save')]")
     PRICE_BREAKDOWN = (By.XPATH, "//div[contains(@class, 'text-sm text-gray-600') and contains(text(), '×')]")
+    ADD_TO_CART_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-orange-600') and contains(text(), 'ADD TO CART')]")
+    SHOPPING_CART_HEADING = (By.XPATH, "//h1[contains(@class, 'text-xl') and contains(text(), 'Shopping Cart')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -287,4 +289,73 @@ class CartPage:
             return True
         except Exception as e:
             print(f"[ERROR] Could not validate pricing calculations: {e}")
+            return False
+    
+    def add_to_cart_button_click(self):
+        """Click ADD TO CART button with quantity validation."""
+        try:
+            print("[ACTION] Looking for ADD TO CART button...")
+            
+            # Find ADD TO CART button
+            add_to_cart_button = self.wait.until(EC.element_to_be_clickable(self.ADD_TO_CART_BUTTON))
+            button_text = add_to_cart_button.text
+            
+            # Extract quantity from button text (e.g., "ADD TO CART (5)")
+            button_qty_match = re.search(r'\((\d+)\)', button_text)
+            if button_qty_match:
+                button_qty = int(button_qty_match.group(1))
+                
+                # Compare with entered quantity
+                if CartPage.entered_quantity and button_qty == CartPage.entered_quantity:
+                    print(f"[SUCCESS] ✅ Quantity validation passed: Button shows ({button_qty}) matches Entered Quantity: {CartPage.entered_quantity}")
+                else:
+                    print(f"[WARNING] ⚠️ Quantity mismatch: Button shows ({button_qty}) but Entered Quantity: {CartPage.entered_quantity}")
+            
+            # Click the button
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", add_to_cart_button)
+            time.sleep(1)
+            add_to_cart_button.click()
+            print("[SUCCESS] ADD TO CART button clicked successfully")
+            
+            # Handle alert
+            try:
+                print("[INFO] Waiting for cart alert...")
+                WebDriverWait(self.driver, 5).until(EC.alert_is_present())
+                alert = self.driver.switch_to.alert
+                alert_text = alert.text
+                print(f"[INFO] Alert message: {alert_text}")
+                alert.accept()  # Click OK
+                print("[SUCCESS] Alert accepted successfully")
+            except Exception as e:
+                print(f"[WARNING] No alert appeared or could not handle alert: {e}")
+            
+            return True
+        except Exception as e:
+            print(f"[ERROR] Could not click ADD TO CART button: {e}")
+            return False
+    
+    def verify_on_cart_page(self):
+        """Verify if user is on the cart page."""
+        try:
+            print("[ACTION] Verifying if on cart page...")
+            print("[INFO] Waiting for page navigation to complete...")
+            time.sleep(5)  # Wait longer for page to load
+            
+            # Wait for Shopping Cart heading with longer timeout
+            print("[INFO] Looking for Shopping Cart heading...")
+            cart_heading = WebDriverWait(self.driver, 15).until(
+                EC.presence_of_element_located(self.SHOPPING_CART_HEADING)
+            )
+            heading_text = cart_heading.text
+            
+            if "Shopping Cart" in heading_text:
+                print(f"[SUCCESS] ✅ Successfully navigated to cart page: '{heading_text}' found")
+                return True
+            else:
+                print(f"[FAIL] ❌ Not on cart page: Expected 'Shopping Cart' but found '{heading_text}'")
+                return False
+        except Exception as e:
+            print(f"[ERROR] Could not verify cart page: {e}")
+            print(f"[INFO] Current page URL: {self.driver.current_url}")
+            print(f"[INFO] Current page title: {self.driver.title}")
             return False

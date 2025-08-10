@@ -104,6 +104,26 @@ def validate_pricing(cart_page):
         print("[FAIL] Failed to validate pricing calculations")
         return False
 
+def add_to_cart(cart_page):
+    """Add product to cart"""
+    print("[ACTION] Adding product to cart...")
+    if cart_page.add_to_cart_button_click():
+        print("[SUCCESS] Product added to cart successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to add product to cart")
+        return False
+
+def verify_cart_page(cart_page):
+    """Verify cart page navigation"""
+    print("[ACTION] Verifying cart page...")
+    if cart_page.verify_on_cart_page():
+        print("[SUCCESS] Cart page verification completed successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to verify cart page")
+        return False
+
 def test_login_and_click_product(driver):
     """Main test function for cart page"""
     print("[TEST] Starting cart page test...")
@@ -128,5 +148,11 @@ def test_login_and_click_product(driver):
     
     # Validate pricing calculations
     validate_pricing(cart_page)
+    
+    # Add to cart
+    add_to_cart(cart_page)
+    
+    # Verify cart page
+    verify_cart_page(cart_page)
     
     print("[PASS] Cart page test completed successfully")
