@@ -13,7 +13,7 @@ class CartPage:
     PASSWORD_INPUT = (By.NAME, "password")
     SUBMIT_BUTTON = (By.CSS_SELECTOR, "button[type='submit'].w-full.bg-gradient-to-r.from-blue-600.to-blue-700")
     LOGIN_SUCCESS_INDICATOR = (By.XPATH, "//button[contains(text(),'Buttonphone')]")
-    PRODUCT_ELEMENTS = (By.XPATH, "//div[contains(@class, 'product') or contains(@class, 'item')]//img | //a[contains(@href, 'product')]")
+    PRODUCT_ELEMENTS = (By.XPATH, "//div[contains(@class, 'w-full p-3') and contains(@class, 'bg-white rounded-xl shadow-lg') and contains(@class, 'cursor-pointer')]")
     
     def __init__(self, driver):
         self.driver = driver
