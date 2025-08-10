@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import time
 import re
+from datetime import datetime
 
 class CartPage:
     """Page object for the Cart page."""
@@ -17,6 +18,7 @@ class CartPage:
     entered_quantity = None
     pre_cart_final_price = None
     pre_cart_savings = None
+    order_placed_time = None
     
     # Locators
     SIGN_IN_BUTTON = (By.XPATH, "//span[@class='text-sm font-medium' and text()='Sign In']")
@@ -50,6 +52,16 @@ class CartPage:
     CART_ITEM_TOTAL = (By.XPATH, "//span[@class='font-semibold text-sm sm:text-base whitespace-nowrap']")
     CART_BULK_DISCOUNT_TEXT = (By.XPATH, "//div[contains(@class, 'text-green-600') and contains(text(), 'Bulk discount applied')]")
     ORDER_SEARCH_BOX = (By.XPATH, "//input[@placeholder='🔍 Search orders (auto-search after 1.5s)...']")
+    ORDER_NUMBER = (By.XPATH, "//h4[contains(@class, 'text-base font-semibold text-gray-800')]")
+    ORDER_STATUS = (By.XPATH, "//span[contains(@class, 'px-3 py-1 rounded-full text-xs font-bold uppercase')]")
+    ORDER_DATE = (By.XPATH, "//p[contains(@class, 'text-xs text-gray-500') and contains(text(), 'Order Date:')]")
+    ORDER_TOTAL = (By.XPATH, "//p[contains(@class, 'text-sm text-gray-700 font-semibold') and contains(text(), 'Total:')]")
+    ORDER_ITEM_QUANTITY = (By.XPATH, "//div[contains(@class, 'text-sm text-gray-500') and contains(text(), 'Quantity:')]")
+    ORDER_ITEM_PRICE = (By.XPATH, "//div[contains(@class, 'text-sm text-gray-500') and contains(text(), 'Price:')]")
+    ORDER_ITEM_TOTAL = (By.XPATH, "//div[contains(@class, 'text-sm text-gray-700 font-semibold') and contains(text(), 'Total:')]")
+    ORDER_ITEM_DISCOUNT = (By.XPATH, "//div[contains(@class, 'text-sm text-green-600') and contains(text(), 'Discount:')]")
+    SHOW_ITEMS_BUTTON = (By.XPATH, "//span[contains(@class, 'text-blue-600') and contains(text(), 'Show Items')]")
+    PLACE_ORDER_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-blue-600') and contains(text(), 'PLACE ORDER')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -567,10 +579,12 @@ class CartPage:
     def place_order_button_click(self):
         """Click the PLACE ORDER button and handle alert."""
         try:
-            place_order_xpath = "//button[contains(@class, 'bg-blue-600') and contains(text(), 'PLACE ORDER')]"
+            # Capture current time before placing order
+            CartPage.order_placed_time = datetime.now()
+            print(f"[INFO] Order placement time captured: {CartPage.order_placed_time.strftime('%m/%d/%Y at %I:%M %p')}")
             
             # Click the button
-            if not self.button_click(place_order_xpath, "PLACE ORDER button"):
+            if not self.button_click(self.PLACE_ORDER_BUTTON[1], "PLACE ORDER button"):
                 return False
             
             # Handle alert
@@ -611,6 +625,15 @@ class CartPage:
                 current_url = self.driver.current_url
                 print(f"[INFO] Current page URL: {current_url}")
                 
+                # Click Show Items button to expand order details
+                try:
+                    show_items_button = self.driver.find_element(*self.SHOW_ITEMS_BUTTON)
+                    show_items_button.click()
+                    print("[SUCCESS] Show Items button clicked")
+                    time.sleep(2)
+                except Exception as e:
+                    print(f"[WARNING] Could not click Show Items button: {e}")
+                
                 return True
             else:
                 print(f"[FAIL] ❌ Not on order page: Search orders functionality not found")
@@ -621,3 +644,146 @@ class CartPage:
             print(f"[INFO] Current page URL: {self.driver.current_url}")
             print(f"[INFO] Current page title: {self.driver.title}")
             return False
+    
+    def validate_order_details(self):
+        """Validate order details against all global variables."""
+        try:
+            print("[INFO] ========== VALIDATING ORDER DETAILS ==========\n")
+            time.sleep(3)
+            
+            # Extract order details
+            try:
+                order_number = self.driver.find_element(*self.ORDER_NUMBER).text
+                print(f"[INFO] {order_number}")
+            except:
+                print("[WARNING] Could not extract order number")
+            
+            try:
+                order_status = self.driver.find_element(*self.ORDER_STATUS).text
+                print(f"[INFO] Order Status: {order_status}")
+            except:
+                print("[WARNING] Could not extract order status")
+            
+            try:
+                order_date = self.driver.find_element(*self.ORDER_DATE).text
+                print(f"[INFO] {order_date}")
+                
+                # Validate date and time
+                if CartPage.order_placed_time:
+                    self.validate_order_datetime(order_date)
+            except:
+                print("[ERROR] Could not extract order date")
+                return False
+            
+            try:
+                order_total_text = self.driver.find_element(*self.ORDER_TOTAL).text
+                order_total_num = float(re.search(r'[₹]([\d,]+\.?\d*)', order_total_text).group(1).replace(',', ''))
+                print(f"[INFO] {order_total_text}")
+            except:
+                print("[ERROR] Could not extract order total")
+                return False
+            
+            try:
+                order_quantity_text = self.driver.find_element(*self.ORDER_ITEM_QUANTITY).text
+                order_quantity = int(re.search(r'(\d+)', order_quantity_text).group(1))
+                print(f"[INFO] Order Item {order_quantity_text}")
+            except:
+                print("[ERROR] Could not extract order quantity")
+                return False
+            
+            try:
+                order_price_text = self.driver.find_element(*self.ORDER_ITEM_PRICE).text
+                order_price_num = float(re.search(r'[₹]([\d,]+\.?\d*)', order_price_text).group(1).replace(',', ''))
+                print(f"[INFO] Order Item {order_price_text}")
+            except:
+                print("[ERROR] Could not extract order price")
+                return False
+            
+            try:
+                order_item_total_text = self.driver.find_element(*self.ORDER_ITEM_TOTAL).text
+                order_item_total_num = float(re.search(r'[₹]([\d,]+\.?\d*)', order_item_total_text).group(1).replace(',', ''))
+                print(f"[INFO] Order Item {order_item_total_text}")
+            except:
+                print("[ERROR] Could not extract order item total")
+                return False
+            
+            try:
+                order_discount_text = self.driver.find_element(*self.ORDER_ITEM_DISCOUNT).text
+                order_discount_num = float(re.search(r'[₹]([\d,]+\.?\d*)', order_discount_text).group(1).replace(',', ''))
+                print(f"[INFO] Order Item {order_discount_text}")
+            except:
+                print("[ERROR] Could not extract order discount")
+                return False
+            
+            # Compare with global variables
+            product_price_num = float(re.search(r'[₹]([\d,]+\.?\d*)', CartPage.product_price).group(1).replace(',', '')) if CartPage.product_price != "Not found" else 0
+            
+            print("\n[INFO] ========== ORDER VALIDATION RESULTS ==========\n")
+            
+            if order_quantity == CartPage.entered_quantity:
+                print(f"[SUCCESS] ✅ Quantity matches: Order ({order_quantity}) = Expected ({CartPage.entered_quantity})")
+            else:
+                print(f"[FAIL] ❌ Quantity mismatch: Order ({order_quantity}) ≠ Expected ({CartPage.entered_quantity})")
+            
+            if abs(order_price_num - product_price_num) < 0.01:
+                print(f"[SUCCESS] ✅ Price matches: Order (₹{order_price_num}) = Expected (₹{product_price_num})")
+            else:
+                print(f"[FAIL] ❌ Price mismatch: Order (₹{order_price_num}) ≠ Expected (₹{product_price_num})")
+            
+            if abs(order_total_num - CartPage.pre_cart_final_price) < 0.01:
+                print(f"[SUCCESS] ✅ Total matches: Order (₹{order_total_num}) = Expected (₹{CartPage.pre_cart_final_price})")
+            else:
+                print(f"[FAIL] ❌ Total mismatch: Order (₹{order_total_num}) ≠ Expected (₹{CartPage.pre_cart_final_price})")
+            
+            if abs(order_discount_num - CartPage.pre_cart_savings) < 0.01:
+                print(f"[SUCCESS] ✅ Discount matches: Order (₹{order_discount_num}) = Expected (₹{CartPage.pre_cart_savings})")
+            else:
+                print(f"[FAIL] ❌ Discount mismatch: Order (₹{order_discount_num}) ≠ Expected (₹{CartPage.pre_cart_savings})")
+            
+            if abs(order_item_total_num - CartPage.pre_cart_final_price) < 0.01:
+                print(f"[SUCCESS] ✅ Item total matches: Order (₹{order_item_total_num}) = Expected (₹{CartPage.pre_cart_final_price})")
+            else:
+                print(f"[FAIL] ❌ Item total mismatch: Order (₹{order_item_total_num}) ≠ Expected (₹{CartPage.pre_cart_final_price})")
+            
+            print("\n[INFO] ========== ORDER VALIDATION COMPLETE ==========\n")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] Could not validate order details: {e}")
+            return False
+    
+    def validate_order_datetime(self, order_date_text):
+        """Validate order date and time against captured time."""
+        try:
+            # Parse order date: "Order Date: 8/10/2025 at 07:57 PM"
+            date_match = re.search(r'Order Date: (\d+/\d+/\d+) at (\d+:\d+) (AM|PM)', order_date_text)
+            if not date_match:
+                print("[WARNING] Could not parse order date format")
+                return
+            
+            order_date_str = date_match.group(1)
+            order_time_str = date_match.group(2)
+            order_ampm = date_match.group(3)
+            
+            # Parse order datetime
+            order_datetime_str = f"{order_date_str} {order_time_str} {order_ampm}"
+            order_datetime = datetime.strptime(order_datetime_str, "%m/%d/%Y %I:%M %p")
+            
+            # Compare dates
+            placed_date = CartPage.order_placed_time.strftime("%m/%d/%Y")
+            order_date = order_datetime.strftime("%m/%d/%Y")
+            
+            if placed_date == order_date:
+                print(f"[SUCCESS] ✅ Order date matches: {order_date}")
+            else:
+                print(f"[FAIL] ❌ Order date mismatch: Expected {placed_date}, got {order_date}")
+            
+            # Compare times (max 1 minute difference)
+            time_diff = abs((order_datetime - CartPage.order_placed_time).total_seconds())
+            if time_diff <= 60:
+                print(f"[SUCCESS] ✅ Order time within 1 minute: {time_diff:.0f} seconds difference")
+            else:
+                print(f"[FAIL] ❌ Order time difference too large: {time_diff:.0f} seconds")
+                
+        except Exception as e:
+            print(f"[WARNING] Could not validate order datetime: {e}")

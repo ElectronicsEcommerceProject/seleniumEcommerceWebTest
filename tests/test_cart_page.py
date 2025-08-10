@@ -164,6 +164,16 @@ def verify_order_placement(cart_page):
         print("[FAIL] Failed to verify order placement")
         return False
 
+def validate_order_details(cart_page):
+    """Validate order details against global variables"""
+    print("[ACTION] Validating order details...")
+    if cart_page.validate_order_details():
+        print("[SUCCESS] Order details validation completed successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to validate order details")
+        return False
+
 def test_login_and_click_product(driver):
     """Main test function for cart page"""
     print("[TEST] Starting cart page test...")
@@ -203,5 +213,8 @@ def test_login_and_click_product(driver):
     
     # Verify order placement
     verify_order_placement(cart_page)
+    
+    # Validate order details
+    validate_order_details(cart_page)
     
     print("[PASS] Cart page test completed successfully")
