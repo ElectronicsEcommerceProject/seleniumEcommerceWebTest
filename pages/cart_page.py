@@ -546,3 +546,46 @@ class CartPage:
         except Exception as e:
             print(f"[ERROR] Could not validate cart item details: {e}")
             return False
+    
+    def button_click(self, xpath, button_name="Button"):
+        """Generic function to click any button by xpath."""
+        try:
+            print(f"[ACTION] Looking for {button_name}...")
+            button = self.wait.until(EC.element_to_be_clickable((By.XPATH, xpath)))
+            
+            # Scroll to button and click
+            self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
+            time.sleep(1)
+            button.click()
+            print(f"[SUCCESS] {button_name} clicked successfully")
+            return True
+        except Exception as e:
+            print(f"[ERROR] Could not click {button_name}: {e}")
+            return False
+    
+    def place_order_button_click(self):
+        """Click the PLACE ORDER button and handle alert."""
+        try:
+            place_order_xpath = "//button[contains(@class, 'bg-blue-600') and contains(text(), 'PLACE ORDER')]"
+            
+            # Click the button
+            if not self.button_click(place_order_xpath, "PLACE ORDER button"):
+                return False
+            
+            # Handle alert
+            try:
+                print("[INFO] Waiting for order confirmation alert...")
+                WebDriverWait(self.driver, 5).until(EC.alert_is_present())
+                alert = self.driver.switch_to.alert
+                alert_text = alert.text
+                print(f"[INFO] Alert message: {alert_text}")
+                alert.accept()  # Click OK
+                print("[SUCCESS] Order confirmation alert accepted successfully")
+                return True
+            except Exception as e:
+                print(f"[WARNING] No alert appeared or could not handle alert: {e}")
+                return True
+                
+        except Exception as e:
+            print(f"[ERROR] Could not complete place order process: {e}")
+            return False

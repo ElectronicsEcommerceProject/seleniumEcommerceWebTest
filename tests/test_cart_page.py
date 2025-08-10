@@ -144,6 +144,16 @@ def validate_cart_details(cart_page):
         print("[FAIL] Failed to validate cart item details")
         return False
 
+def place_order(cart_page):
+    """Click place order button"""
+    print("[ACTION] Placing order...")
+    if cart_page.place_order_button_click():
+        print("[SUCCESS] Place order button clicked successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to click place order button")
+        return False
+
 def test_login_and_click_product(driver):
     """Main test function for cart page"""
     print("[TEST] Starting cart page test...")
@@ -177,5 +187,8 @@ def test_login_and_click_product(driver):
     
     # Validate cart details
     validate_cart_details(cart_page)
+    
+    # Place order
+    place_order(cart_page)
     
     print("[PASS] Cart page test completed successfully")
