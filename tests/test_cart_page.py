@@ -154,6 +154,16 @@ def place_order(cart_page):
         print("[FAIL] Failed to click place order button")
         return False
 
+def verify_order_placement(cart_page):
+    """Verify order was placed successfully"""
+    print("[ACTION] Verifying order placement...")
+    if cart_page.verify_order_placed_successfully():
+        print("[SUCCESS] Order placement verification completed successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to verify order placement")
+        return False
+
 def test_login_and_click_product(driver):
     """Main test function for cart page"""
     print("[TEST] Starting cart page test...")
@@ -190,5 +200,8 @@ def test_login_and_click_product(driver):
     
     # Place order
     place_order(cart_page)
+    
+    # Verify order placement
+    verify_order_placement(cart_page)
     
     print("[PASS] Cart page test completed successfully")

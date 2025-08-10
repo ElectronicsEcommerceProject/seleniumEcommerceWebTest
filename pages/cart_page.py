@@ -49,6 +49,7 @@ class CartPage:
     CART_ITEM_QUANTITY = (By.XPATH, "//span[contains(@class, 'px-2 py-1 min-w-[32px] text-center text-sm')]")
     CART_ITEM_TOTAL = (By.XPATH, "//span[@class='font-semibold text-sm sm:text-base whitespace-nowrap']")
     CART_BULK_DISCOUNT_TEXT = (By.XPATH, "//div[contains(@class, 'text-green-600') and contains(text(), 'Bulk discount applied')]")
+    ORDER_SEARCH_BOX = (By.XPATH, "//input[@placeholder='🔍 Search orders (auto-search after 1.5s)...']")
     
     def __init__(self, driver):
         self.driver = driver
@@ -588,4 +589,35 @@ class CartPage:
                 
         except Exception as e:
             print(f"[ERROR] Could not complete place order process: {e}")
+            return False
+    
+    def verify_order_placed_successfully(self):
+        """Verify that order was placed successfully by checking order page."""
+        try:
+            print("[ACTION] Verifying order placement...")
+            print("[INFO] Waiting for navigation to order page...")
+            time.sleep(5)  # Wait for page navigation
+            
+            # Look for order search box to confirm we're on order page
+            print("[INFO] Looking for order search functionality...")
+            search_box = WebDriverWait(self.driver, 15).until(
+                EC.presence_of_element_located(self.ORDER_SEARCH_BOX)
+            )
+            
+            if search_box:
+                print(f"[SUCCESS] ✅ Successfully navigated to order page: Search orders functionality found")
+                
+                # Get current page info for confirmation
+                current_url = self.driver.current_url
+                print(f"[INFO] Current page URL: {current_url}")
+                
+                return True
+            else:
+                print(f"[FAIL] ❌ Not on order page: Search orders functionality not found")
+                return False
+                
+        except Exception as e:
+            print(f"[ERROR] Could not verify order placement: {e}")
+            print(f"[INFO] Current page URL: {self.driver.current_url}")
+            print(f"[INFO] Current page title: {self.driver.title}")
             return False
