@@ -134,6 +134,16 @@ def verify_cart_page(cart_page):
         print("[FAIL] Failed to verify cart page")
         return False
 
+def validate_cart_details(cart_page):
+    """Validate cart item details"""
+    print("[ACTION] Validating cart item details...")
+    if cart_page.validate_cart_item_details():
+        print("[SUCCESS] Cart item validation completed successfully!")
+        return True
+    else:
+        print("[FAIL] Failed to validate cart item details")
+        return False
+
 def test_login_and_click_product(driver):
     """Main test function for cart page"""
     print("[TEST] Starting cart page test...")
@@ -164,5 +174,8 @@ def test_login_and_click_product(driver):
     
     # Verify cart page
     verify_cart_page(cart_page)
+    
+    # Validate cart details
+    validate_cart_details(cart_page)
     
     print("[PASS] Cart page test completed successfully")

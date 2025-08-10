@@ -15,6 +15,8 @@ class CartPage:
     bulk_discount_percentage = None
     bulk_discount_unit = None
     entered_quantity = None
+    pre_cart_final_price = None
+    pre_cart_savings = None
     
     # Locators
     SIGN_IN_BUTTON = (By.XPATH, "//span[@class='text-sm font-medium' and text()='Sign In']")
@@ -42,6 +44,11 @@ class CartPage:
     SHOPPING_CART_HEADING = (By.XPATH, "//h1[contains(@class, 'text-xl') and contains(text(), 'Shopping Cart')]")
     REMOVE_BUTTONS = (By.XPATH, "//button[contains(@class, 'text-red-600') and text()='Remove']")
     EMPTY_CART_MESSAGE = (By.XPATH, "//*[contains(text(), 'Your cart is empty')]")
+    CART_ITEM_PRICE = (By.XPATH, "//span[@class='font-semibold text-base sm:text-lg']")
+    CART_ITEM_DISCOUNT = (By.XPATH, "//span[@class='text-xs text-green-600']")
+    CART_ITEM_QUANTITY = (By.XPATH, "//span[contains(@class, 'px-2 py-1 min-w-[32px] text-center text-sm')]")
+    CART_ITEM_TOTAL = (By.XPATH, "//span[@class='font-semibold text-sm sm:text-base whitespace-nowrap']")
+    CART_BULK_DISCOUNT_TEXT = (By.XPATH, "//div[contains(@class, 'text-green-600') and contains(text(), 'Bulk discount applied')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -217,8 +224,10 @@ class CartPage:
             # Extract final price
             try:
                 final_price = self.driver.find_element(*self.FINAL_PRICE).text
+                CartPage.pre_cart_final_price = float(re.search(r'[₹]([\d,]+\.?\d*)', final_price).group(1).replace(',', ''))
                 print(f"[INFO] Final Price: {final_price}")
             except:
+                CartPage.pre_cart_final_price = 0
                 print("[INFO] Final Price: Not found")
             
             # Extract original price
@@ -231,8 +240,10 @@ class CartPage:
             # Extract savings
             try:
                 savings = self.driver.find_element(*self.SAVINGS_AMOUNT).text
+                CartPage.pre_cart_savings = float(re.search(r'[₹]([\d,]+\.?\d*)', savings).group(1).replace(',', ''))
                 print(f"[INFO] {savings}")
             except:
+                CartPage.pre_cart_savings = 0
                 print("[INFO] Savings: Not found")
             
             return True
@@ -444,4 +455,94 @@ class CartPage:
             return result
         except Exception as e:
             print(f"[ERROR] Could not retry add to cart process: {e}")
+            return False
+    
+    def validate_cart_item_details(self):
+        """Compare cart item details with pre-cart values."""
+        try:
+            print("[INFO] ========== VALIDATING CART ITEM DETAILS ==========\n")
+            time.sleep(3)  # Wait for cart page to load
+            
+            # Extract cart item details
+            try:
+                cart_price = self.driver.find_element(*self.CART_ITEM_PRICE).text
+                cart_price_num = float(re.search(r'[₹]([\d,]+\.?\d*)', cart_price).group(1).replace(',', ''))
+                print(f"[INFO] Cart Item Price: {cart_price}")
+            except:
+                print("[ERROR] Could not extract cart item price")
+                return False
+            
+            try:
+                cart_discount = self.driver.find_element(*self.CART_ITEM_DISCOUNT).text
+                cart_discount_num = float(re.search(r'[₹]([\d,]+\.?\d*)', cart_discount).group(1).replace(',', ''))
+                print(f"[INFO] Cart Item Discount: {cart_discount}")
+            except:
+                print("[ERROR] Could not extract cart item discount")
+                return False
+            
+            try:
+                cart_quantity = int(self.driver.find_element(*self.CART_ITEM_QUANTITY).text)
+                print(f"[INFO] Cart Item Quantity: {cart_quantity}")
+            except:
+                print("[ERROR] Could not extract cart item quantity")
+                return False
+            
+            try:
+                cart_total = self.driver.find_element(*self.CART_ITEM_TOTAL).text
+                cart_total_num = float(re.search(r'[₹]([\d,]+\.?\d*)', cart_total).group(1).replace(',', ''))
+                print(f"[INFO] Cart Item Total: {cart_total}")
+            except:
+                print("[ERROR] Could not extract cart item total")
+                return False
+            
+            try:
+                bulk_discount_text = self.driver.find_element(*self.CART_BULK_DISCOUNT_TEXT).text
+                bulk_percentage_match = re.search(r'([\d.]+)%', bulk_discount_text)
+                cart_bulk_percentage = float(bulk_percentage_match.group(1)) if bulk_percentage_match else 0
+                print(f"[INFO] Cart Bulk Discount: {bulk_discount_text}")
+            except:
+                print("[ERROR] Could not extract cart bulk discount")
+                return False
+            
+            # Get pre-cart values from stored class variables
+            product_price_num = float(re.search(r'[₹]([\d,]+\.?\d*)', CartPage.product_price).group(1).replace(',', '')) if CartPage.product_price != "Not found" else 0
+            entered_qty = CartPage.entered_quantity if CartPage.entered_quantity else 0
+            pre_cart_bulk_percent = float(re.search(r'([\d.]+)', CartPage.bulk_discount_percentage).group(1)) if CartPage.bulk_discount_percentage != "Not found" else 0
+            
+            # Calculate expected pre-cart values
+            pre_cart_original_price = product_price_num * entered_qty
+            pre_cart_discount_amount = pre_cart_original_price * (pre_cart_bulk_percent / 100)
+            pre_cart_final_price = pre_cart_original_price - pre_cart_discount_amount
+            
+            print("\n[INFO] ========== COMPARISON RESULTS ==========\n")
+            
+            # Validation 1: Quantity comparison
+            if cart_quantity == CartPage.entered_quantity:
+                print(f"[SUCCESS] ✅ Quantity matches: Cart ({cart_quantity}) = Entered ({CartPage.entered_quantity})")
+            else:
+                print(f"[FAIL] ❌ Quantity mismatch: Cart ({cart_quantity}) ≠ Entered ({CartPage.entered_quantity})")
+            
+            # Validation 2: Final price comparison
+            if abs(cart_total_num - pre_cart_final_price) < 0.01:
+                print(f"[SUCCESS] ✅ Total price matches: Cart (₹{cart_total_num}) = Pre-cart (₹{pre_cart_final_price})")
+            else:
+                print(f"[FAIL] ❌ Total price mismatch: Cart (₹{cart_total_num}) ≠ Pre-cart (₹{pre_cart_final_price})")
+            
+            # Validation 3: Discount amount comparison
+            if abs(cart_discount_num - pre_cart_discount_amount) < 0.01:
+                print(f"[SUCCESS] ✅ Discount amount matches: Cart (₹{cart_discount_num}) = Pre-cart (₹{pre_cart_discount_amount})")
+            else:
+                print(f"[FAIL] ❌ Discount amount mismatch: Cart (₹{cart_discount_num}) ≠ Pre-cart (₹{pre_cart_discount_amount})")
+            
+            # Validation 4: Bulk discount percentage comparison
+            if abs(cart_bulk_percentage - pre_cart_bulk_percent) < 0.01:
+                print(f"[SUCCESS] ✅ Bulk discount percentage matches: Cart ({cart_bulk_percentage}%) = Pre-cart ({pre_cart_bulk_percent}%)")
+            else:
+                print(f"[FAIL] ❌ Bulk discount percentage mismatch: Cart ({cart_bulk_percentage}%) ≠ Pre-cart ({pre_cart_bulk_percent}%)")
+            
+            print("\n[INFO] ========== CART VALIDATION COMPLETE ==========\n")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] Could not validate cart item details: {e}")
             return False
