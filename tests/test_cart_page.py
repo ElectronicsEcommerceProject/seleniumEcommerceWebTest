@@ -107,7 +107,17 @@ def validate_pricing(cart_page):
 def add_to_cart(cart_page):
     """Add product to cart"""
     print("[ACTION] Adding product to cart...")
-    if cart_page.add_to_cart_button_click():
+    result = cart_page.add_to_cart_button_click()
+    
+    if result == "retry":
+        print("[INFO] Retrying add to cart process after clearing existing items...")
+        if cart_page.retry_add_to_cart_process():
+            print("[SUCCESS] Product added to cart successfully after retry!")
+            return True
+        else:
+            print("[FAIL] Failed to add product to cart even after retry")
+            return False
+    elif result:
         print("[SUCCESS] Product added to cart successfully!")
         return True
     else:

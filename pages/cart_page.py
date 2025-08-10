@@ -40,6 +40,8 @@ class CartPage:
     PRICE_BREAKDOWN = (By.XPATH, "//div[contains(@class, 'text-sm text-gray-600') and contains(text(), '×')]")
     ADD_TO_CART_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-orange-600') and contains(text(), 'ADD TO CART')]")
     SHOPPING_CART_HEADING = (By.XPATH, "//h1[contains(@class, 'text-xl') and contains(text(), 'Shopping Cart')]")
+    REMOVE_BUTTONS = (By.XPATH, "//button[contains(@class, 'text-red-600') and text()='Remove']")
+    EMPTY_CART_MESSAGE = (By.XPATH, "//*[contains(text(), 'Your cart is empty')]")
     
     def __init__(self, driver):
         self.driver = driver
@@ -324,8 +326,20 @@ class CartPage:
                 alert = self.driver.switch_to.alert
                 alert_text = alert.text
                 print(f"[INFO] Alert message: {alert_text}")
-                alert.accept()  # Click OK
-                print("[SUCCESS] Alert accepted successfully")
+                
+                # Check if item already exists in cart
+                if "Item already exist in cart" in alert_text:
+                    alert.accept()
+                    print("[INFO] Item already in cart - clearing cart first...")
+                    if self.clear_existing_cart():
+                        print("[INFO] Cart cleared - returning to product page to retry...")
+                        self.driver.back()  # Go back to product page
+                        time.sleep(3)
+                        return "retry"  # Signal to retry the process
+                    return False
+                else:
+                    alert.accept()  # Click OK
+                    print("[SUCCESS] Alert accepted successfully")
             except Exception as e:
                 print(f"[WARNING] No alert appeared or could not handle alert: {e}")
             
@@ -358,4 +372,76 @@ class CartPage:
             print(f"[ERROR] Could not verify cart page: {e}")
             print(f"[INFO] Current page URL: {self.driver.current_url}")
             print(f"[INFO] Current page title: {self.driver.title}")
+            return False
+    
+    def clear_existing_cart(self):
+        """Navigate to cart and remove all items."""
+        try:
+            print("[ACTION] Navigating to cart page to clear existing items...")
+            self.driver.get("https://maalaxmi.store/#/cart")
+            time.sleep(3)
+            
+            # Find and click all Remove buttons
+            while True:
+                try:
+                    remove_buttons = self.driver.find_elements(*self.REMOVE_BUTTONS)
+                    if not remove_buttons:
+                        print("[INFO] No more Remove buttons found")
+                        break
+                    
+                    print(f"[INFO] Found {len(remove_buttons)} Remove button(s)")
+                    # Click the first Remove button
+                    remove_buttons[0].click()
+                    print("[SUCCESS] Clicked Remove button")
+                    time.sleep(2)  # Wait for item to be removed
+                    
+                except Exception as e:
+                    print(f"[INFO] No more items to remove: {e}")
+                    break
+            
+            # Check for empty cart message
+            try:
+                empty_message = WebDriverWait(self.driver, 5).until(
+                    EC.presence_of_element_located(self.EMPTY_CART_MESSAGE)
+                )
+                print(f"[SUCCESS] ✅ Cart cleared successfully: '{empty_message.text}' found")
+                return True
+            except:
+                print("[INFO] Empty cart message not found, but removal process completed")
+                return True
+                
+        except Exception as e:
+            print(f"[ERROR] Could not clear cart: {e}")
+            return False
+    
+    def retry_add_to_cart_process(self):
+        """Retry the complete add to cart process after clearing cart."""
+        try:
+            print("[INFO] ========== RETRYING ADD TO CART PROCESS ==========\n")
+            
+            # Step 1: Click Set Custom Quantity button
+            if not self.set_custom_quantity_button_click():
+                return False
+            
+            # Step 2: Set bulk discount quantity
+            if not self.set_bulk_discount_quantity():
+                return False
+            
+            # Step 3: Display pricing summary
+            if not self.display_pricing_summary():
+                return False
+            
+            # Step 4: Validate pricing
+            if not self.validate_pricing_calculations():
+                return False
+            
+            # Step 5: Try add to cart again
+            result = self.add_to_cart_button_click()
+            if result == "retry":
+                print("[ERROR] Still getting duplicate item error after clearing cart")
+                return False
+            
+            return result
+        except Exception as e:
+            print(f"[ERROR] Could not retry add to cart process: {e}")
             return False
