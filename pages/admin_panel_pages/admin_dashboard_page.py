@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+import time
 
 
 class AdminDashboardPage:
@@ -18,6 +19,9 @@ class AdminDashboardPage:
     FIRST_ORDER_LINK = (By.XPATH, "(//div[@col-id='id']/button)[1]")
     ORDER_DETAILS_MODAL_TITLE = (By.XPATH, "//h2[contains(text(), 'Order Details')]")
     MODAL_CLOSE_BUTTON_ORDER_DETAILS = (By.XPATH, "//div[@class='flex justify-between items-center mb-4']/button")
+    ORDER_ROWS = (By.XPATH, "//div[@role='row' and contains(@class, 'ag-row')]")
+    ORDER_STATUS_SPAN = (By.XPATH, ".//div[@col-id='status']/span")
+    ORDER_LINK_BUTTON = (By.XPATH, ".//div[@col-id='id']/button")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -95,4 +99,34 @@ class AdminDashboardPage:
             return True
         except Exception as e:
             print(f"Error during first order link navigation check: {e}")
+            return False
+
+    def click_pending_order(self):
+        """Finds and clicks on the first pending order in the customer orders table."""
+        try:
+            order_rows = self.wait.until(EC.presence_of_all_elements_located(self.ORDER_ROWS))
+            print(f"Found {len(order_rows)} order rows.")
+
+            for row in order_rows:
+                status_element = row.find_element(*self.ORDER_STATUS_SPAN)
+                status_text = status_element.text.strip().lower()
+
+                if status_text == "pending":
+                    order_link = row.find_element(*self.ORDER_LINK_BUTTON)
+                    print(f"Found pending order: {order_link.text}. Clicking it...")
+                    ActionChains(self.driver).move_to_element(order_link).click().perform()
+
+                    # Verify modal and close it
+                    self.wait.until(EC.presence_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+                    print("✅ Order details modal opened successfully for pending order.")
+                    close_btn = self.wait.until(EC.element_to_be_clickable(self.MODAL_CLOSE_BUTTON_ORDER_DETAILS))
+                  
+                    close_btn.click()
+                    self.wait.until(EC.invisibility_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+                    print("✅ Order details modal closed for pending order.")
+                    return True
+            print("No pending orders found.")
+            return False
+        except Exception as e:
+            print(f"Error while trying to click pending order: {e}")
             return False

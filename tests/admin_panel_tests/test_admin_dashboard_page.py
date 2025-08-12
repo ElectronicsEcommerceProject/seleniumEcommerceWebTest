@@ -8,6 +8,7 @@ from utils.driver_setup import get_driver
 from pages.admin_panel_pages.admin_login_page import LoginPage
 from pages.admin_panel_pages.admin_login_page import LoginPage
 from pages.admin_panel_pages.admin_dashboard_page import AdminDashboardPage
+import time
 
 load_dotenv()
 
@@ -46,3 +47,8 @@ def test_admin_dashboard_verification(driver):
     print("🔗 Testing first order link navigation...")
     assert admin_dashboard.check_first_order_link_navigation(), "First order link navigation failed"
     print("✅ First order link navigation test completed!")
+
+    # Test clicking on a pending order
+    print("🔗 Testing clicking on a pending order...")
+    admin_dashboard.click_pending_order()
+    print("✅ Pending order click test completed!")
