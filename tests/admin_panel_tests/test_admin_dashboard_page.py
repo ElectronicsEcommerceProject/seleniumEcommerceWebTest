@@ -41,3 +41,8 @@ def test_admin_dashboard_verification(driver):
     print("🔘 Testing button functionality...")
     admin_dashboard.checking_button_working()
     print("✅ Button testing completed!")
+    
+    # Test first order link navigation
+    print("🔗 Testing first order link navigation...")
+    assert admin_dashboard.check_first_order_link_navigation(), "First order link navigation failed"
+    print("✅ First order link navigation test completed!")

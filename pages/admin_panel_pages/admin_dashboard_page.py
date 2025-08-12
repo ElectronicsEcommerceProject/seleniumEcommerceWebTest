@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
 
 
 class AdminDashboardPage:
@@ -13,6 +14,10 @@ class AdminDashboardPage:
     COUPON_MODAL = (By.XPATH, "//div[@class='bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-slide-in relative']")
     MODAL_CLOSE_BUTTON = (By.XPATH, "//button[@class='absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold']")
     COUPON_MODAL_TITLE = (By.XPATH, "//h3[text()='CREATE COUPON']")
+
+    FIRST_ORDER_LINK = (By.XPATH, "(//div[@col-id='id']/button)[1]")
+    ORDER_DETAILS_MODAL_TITLE = (By.XPATH, "//h2[contains(text(), 'Order Details')]")
+    MODAL_CLOSE_BUTTON_ORDER_DETAILS = (By.XPATH, "//div[@class='flex justify-between items-center mb-4']/button")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -67,3 +72,27 @@ class AdminDashboardPage:
             print(f"Create Coupon button error: {e}")
             
         return True
+
+    def check_first_order_link_navigation(self):
+        """Clicks the first order link in the customer orders table and verifies navigation."""
+        current_url = self.driver.current_url
+        try:
+            first_order_link = self.wait.until(
+                EC.element_to_be_clickable(self.FIRST_ORDER_LINK)
+            )
+            print("🖱️ Clicking on the first customer order link...")
+            ActionChains(self.driver).move_to_element(first_order_link).click().perform()
+            
+            # Wait for the modal to appear
+            self.wait.until(EC.presence_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+            print("✅ Order details modal opened successfully.")
+            
+            # Close the modal
+            close_btn = self.wait.until(EC.element_to_be_clickable(self.MODAL_CLOSE_BUTTON_ORDER_DETAILS))
+            close_btn.click()
+            self.wait.until(EC.invisibility_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+            print("✅ Order details modal closed.")
+            return True
+        except Exception as e:
+            print(f"Error during first order link navigation check: {e}")
+            return False
