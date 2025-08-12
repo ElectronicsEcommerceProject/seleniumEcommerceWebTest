@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import Select
 import time
 
 
@@ -22,11 +23,15 @@ class AdminDashboardPage:
     ORDER_ROWS = (By.XPATH, "//div[@role='row' and contains(@class, 'ag-row')]")
     ORDER_STATUS_SPAN = (By.XPATH, ".//div[@col-id='status']/span")
     ORDER_LINK_BUTTON = (By.XPATH, ".//div[@col-id='id']/button")
+    ORDER_STATUS_DROPDOWN = (By.XPATH, "//select[@class='border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto']")
+    SAVE_CHANGES_BUTTON = (By.XPATH, "//button[normalize-space()='Save Changes']")
+    ORDER_NUMBER_MODAL_TEXT = (By.XPATH, "//h2[contains(text(), 'Order Details')]")
 
     # ================= INIT =================
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
+        self.last_clicked_order_number = None
 
     # ================= METHODS =================
     def verifying_adminDashboard(self):
@@ -116,14 +121,124 @@ class AdminDashboardPage:
                     print(f"Found pending order: {order_link.text}. Clicking it...")
                     ActionChains(self.driver).move_to_element(order_link).click().perform()
 
-                    # Verify modal and close it
+                    # Verify modal
                     self.wait.until(EC.presence_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
                     print("✅ Order details modal opened successfully for pending order.")
+
+                    # Get order number
+                    order_number_text = self.wait.until(EC.visibility_of_element_located(self.ORDER_NUMBER_MODAL_TEXT)).text
+                    self.last_clicked_order_number = order_number_text.split(' - ')[1]
+                    print(f"Order Number: {self.last_clicked_order_number}")
+
+                    # Change status to Processing
+                    status_dropdown = self.wait.until(EC.element_to_be_clickable(self.ORDER_STATUS_DROPDOWN))
+                    select = Select(status_dropdown)
+                    select.select_by_value("processing")
+                    print("Status changed to Processing.")
+
+                    # Click Save Changes
+                    save_button = self.wait.until(EC.element_to_be_clickable(self.SAVE_CHANGES_BUTTON))
+                    save_button.click()
+                    print("Save Changes button clicked.")
+
+                    # Handle alert
+                    self.wait.until(EC.alert_is_present())
+                    alert = self.driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alert Text: {alert_text}")
+                    alert.accept()
+                    print("Alert accepted.")
+
+                    # Close the modal
                     close_btn = self.wait.until(EC.element_to_be_clickable(self.MODAL_CLOSE_BUTTON_ORDER_DETAILS))
-                  
                     close_btn.click()
                     self.wait.until(EC.invisibility_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
                     print("✅ Order details modal closed for pending order.")
+
+                    # Re-open the order to change status back to Pending
+                    print(f"Re-opening order {self.last_clicked_order_number} to change status back to Pending...")
+                    # Find the order link button using the order number and its column ID
+                    xpath_to_use = f"//div[@col-id='id']//button[contains(text(), '{self.last_clicked_order_number}')]"
+                    print(f"XPath for re-opening: {xpath_to_use}")
+                    re_open_order_link = self.wait.until(EC.element_to_be_clickable((By.XPATH, xpath_to_use)))
+                    ActionChains(self.driver).move_to_element(re_open_order_link).click().perform()
+                    self.wait.until(EC.presence_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+
+                    # Change status back to Pending
+                    status_dropdown = self.wait.until(EC.element_to_be_clickable(self.ORDER_STATUS_DROPDOWN))
+                    select = Select(status_dropdown)
+                    select.select_by_value("pending")
+                    print("Status changed back to Pending.")
+
+                    # Click Save Changes again
+                    save_button = self.wait.until(EC.element_to_be_clickable(self.SAVE_CHANGES_BUTTON))
+                    save_button.click()
+                    print("Save Changes button clicked again.")
+
+                    # Handle alert again
+                    self.wait.until(EC.alert_is_present())
+                    alert = self.driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alert Text: {alert_text}")
+                    alert.accept()
+                    print("Alert accepted.")
+
+                    # Close the modal
+                    close_btn = self.wait.until(EC.element_to_be_clickable(self.MODAL_CLOSE_BUTTON_ORDER_DETAILS))
+                    close_btn.click()
+                    self.wait.until(EC.invisibility_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+                    print("✅ Order details modal closed after reverting status.")
+
+                    # Change status back to Pending
+                    status_dropdown = self.wait.until(EC.element_to_be_clickable(self.ORDER_STATUS_DROPDOWN))
+                    select = Select(status_dropdown)
+                    select.select_by_value("pending")
+                    print("Status changed back to Pending.")
+
+                    # Click Save Changes again
+                    save_button = self.wait.until(EC.element_to_be_clickable(self.SAVE_CHANGES_BUTTON))
+                    save_button.click()
+                    print("Save Changes button clicked again.")
+
+                    # Handle alert again
+                    self.wait.until(EC.alert_is_present())
+                    alert = self.driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alert Text: {alert_text}")
+                    alert.accept()
+                    print("Alert accepted.")
+
+                    # Close the modal
+                    close_btn = self.wait.until(EC.element_to_be_clickable(self.MODAL_CLOSE_BUTTON_ORDER_DETAILS))
+                    close_btn.click()
+                    self.wait.until(EC.invisibility_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+                    print("✅ Order details modal closed after reverting status.")
+
+                    # Change status back to Pending
+                    status_dropdown = self.wait.until(EC.element_to_be_clickable(self.ORDER_STATUS_DROPDOWN))
+                    select = Select(status_dropdown)
+                    select.select_by_value("pending")
+                    print("Status changed back to Pending.")
+
+                    # Click Save Changes again
+                    save_button = self.wait.until(EC.element_to_be_clickable(self.SAVE_CHANGES_BUTTON))
+                    save_button.click()
+                    print("Save Changes button clicked again.")
+
+                    # Handle alert again
+                    self.wait.until(EC.alert_is_present())
+                    alert = self.driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alert Text: {alert_text}")
+                    alert.accept()
+                    print("Alert accepted.")
+
+                    # Close the modal
+                    close_btn = self.wait.until(EC.element_to_be_clickable(self.MODAL_CLOSE_BUTTON_ORDER_DETAILS))
+                    close_btn.click()
+                    self.wait.until(EC.invisibility_of_element_located(self.ORDER_DETAILS_MODAL_TITLE))
+                    print("✅ Order details modal closed after reverting status.")
+
                     return True
             print("No pending orders found.")
             return False
