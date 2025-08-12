@@ -1,12 +1,12 @@
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import pytest
 from dotenv import load_dotenv
 from utils.driver_setup import get_driver
-from pages.login_page import LoginPage
-from pages.main_zone_page import MainZonePage
+from pages.user_panel_pages.login_page import LoginPage
+from pages.user_panel_pages.main_zone_page import MainZonePage
 import time
 
 load_dotenv()

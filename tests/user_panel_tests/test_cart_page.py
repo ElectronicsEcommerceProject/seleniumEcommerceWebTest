@@ -1,11 +1,11 @@
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import pytest
 from dotenv import load_dotenv
 from utils.driver_setup import get_driver
-from pages.cart_page import CartPage
+from pages.user_panel_pages.cart_page import CartPage
 import time
 
 load_dotenv()
