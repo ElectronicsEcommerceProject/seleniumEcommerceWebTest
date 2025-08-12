@@ -36,3 +36,8 @@ def test_admin_dashboard_verification(driver):
     
     assert admin_dashboard.verifying_adminDashboard(), "Admin dashboard verification failed"
     print("✅ Admin dashboard verified successfully!")
+    
+    # Test button functionality
+    print("🔘 Testing button functionality...")
+    admin_dashboard.checking_button_working()
+    print("✅ Button testing completed!")
