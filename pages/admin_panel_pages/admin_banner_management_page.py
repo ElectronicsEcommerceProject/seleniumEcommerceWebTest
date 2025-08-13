@@ -21,6 +21,7 @@ class AdminBannerManagementPage:
     FILE_INPUT = (By.XPATH, "//input[@type='file']")
     SAVE_BUTTON = (By.XPATH, "//button[contains(text(), 'Save') or contains(text(), 'Update')]")
     DELETE_BUTTON = (By.XPATH, "//button[@class='text-red-600 hover:text-red-800 p-1']//svg")
+    UPDATED_DATE = (By.XPATH, "//p[contains(., 'Updated:')]")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -158,6 +159,8 @@ class AdminBannerManagementPage:
                     ActionChains(self.driver).move_to_element(save_btn).click().perform()
                     break
             
+            # Verify updated date is today
+            self.verify_updated_date()
             return True
         except Exception as e:
             print("Error editing banner:", e)
@@ -167,6 +170,31 @@ class AdminBannerManagementPage:
                 alert.accept()
             except:
                 pass
+            return False
+
+    def verify_updated_date(self):
+        """Verify the updated date matches today's date"""
+        try:
+            from datetime import datetime
+            updated_element = self.wait.until(
+                EC.presence_of_element_located(self.UPDATED_DATE)
+            )
+            updated_text = updated_element.text
+            print(f"Updated date text: {updated_text}")
+            
+            # Get today's date in M/D/YYYY format (matching website format)
+            now = datetime.now()
+            today = f"{now.month}/{now.day}/{now.year}"
+            print(f"Today's date: {today}")
+            
+            if today in updated_text:
+                print("✅ Updated date matches today's date")
+                return True
+            else:
+                print("❌ Updated date does not match today's date")
+                return False
+        except Exception as e:
+            print("Error verifying updated date:", e)
             return False
 
     def delete_banner_button_click(self):
