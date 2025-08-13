@@ -22,6 +22,18 @@ class AdminBannerManagementPage:
     SAVE_BUTTON = (By.XPATH, "//button[contains(text(), 'Save') or contains(text(), 'Update')]")
     DELETE_BUTTON = (By.XPATH, "//button[@class='text-red-600 hover:text-red-800 p-1']//svg")
     UPDATED_DATE = (By.XPATH, "//p[contains(., 'Updated:')]")
+    ADD_NEW_BANNER_BUTTON = (By.XPATH, "//button[@class='bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700']")
+    
+    # Add New Banner Form elements
+    TITLE_INPUT = (By.XPATH, "//input[@placeholder='Enter banner title']")
+    BUTTON_TEXT_INPUT = (By.XPATH, "//input[@placeholder='Enter button text']")
+    DESCRIPTION_TEXTAREA = (By.XPATH, "//textarea[@placeholder='Enter banner description']")
+    PRICE_INPUT = (By.XPATH, "//input[@placeholder='e.g., Starting ₹1,999']")
+    DISCOUNT_INPUT = (By.XPATH, "//input[@placeholder='e.g., Up to 40% OFF']")
+    BACKGROUND_STYLE_SELECT = (By.XPATH, "//select")
+    BANNER_IMAGE_INPUT = (By.XPATH, "//input[@type='file'][@accept='image/*']")
+    ACTIVE_CHECKBOX_NEW = (By.XPATH, "//input[@id='is_active']")
+    SAVE_NEW_BANNER_BUTTON = (By.XPATH, "//button[@class='bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700']")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -197,29 +209,111 @@ class AdminBannerManagementPage:
             print("Error verifying updated date:", e)
             return False
 
-    def delete_banner_button_click(self):
-        """Click delete button and handle alert"""
+    def click_on_add_new_banner(self):
+        """Click Add New Banner button and fill the form"""
         try:
             from selenium.webdriver.common.action_chains import ActionChains
-            # Try to find delete button by different approaches
-            try:
-                delete_btn = self.wait.until(
-                    EC.presence_of_element_located((By.XPATH, "//button[@class='text-red-600 hover:text-red-800 p-1']"))
-                )
-            except:
-                delete_btn = self.wait.until(
-                    EC.presence_of_element_located(self.DELETE_BUTTON)
-                )
+            from selenium.webdriver.support.ui import Select
+            from PIL import Image
+            import os
             
-            ActionChains(self.driver).move_to_element(delete_btn).click().perform()
+            # Click Add New Banner button
+            add_btn = self.wait.until(
+                EC.element_to_be_clickable(self.ADD_NEW_BANNER_BUTTON)
+            )
+            ActionChains(self.driver).move_to_element(add_btn).click().perform()
             
-            # Handle alert
-            self.wait.until(EC.alert_is_present())
-            alert = self.driver.switch_to.alert
-            alert_text = alert.text
-            print(f"Alert text: {alert_text}")
-            alert.accept()
+            # Fill Title
+            title_input = self.wait.until(EC.presence_of_element_located(self.TITLE_INPUT))
+            title_input.clear()
+            title_input.send_keys("Adding new banner with selenium testing")
+            
+            # Fill Button Text
+            button_text_input = self.driver.find_element(*self.BUTTON_TEXT_INPUT)
+            button_text_input.clear()
+            button_text_input.send_keys("Adding new banner with selenium testing")
+            
+            # Fill Description
+            description_textarea = self.driver.find_element(*self.DESCRIPTION_TEXTAREA)
+            description_textarea.clear()
+            description_textarea.send_keys("Adding new banner with selenium testing")
+            
+            # Fill Price
+            price_input = self.driver.find_element(*self.PRICE_INPUT)
+            price_input.clear()
+            price_input.send_keys("Adding new banner with selenium testing")
+            
+            # Fill Discount
+            discount_input = self.driver.find_element(*self.DISCOUNT_INPUT)
+            discount_input.clear()
+            discount_input.send_keys("Adding new banner with selenium testing")
+            
+            # Select Background Style
+            background_select = self.driver.find_element(*self.BACKGROUND_STYLE_SELECT)
+            select = Select(background_select)
+            select.select_by_index(1)
+            
+            # Upload Banner Image
+            file_input = self.driver.find_element(*self.BANNER_IMAGE_INPUT)
+            test_file_path = os.path.join(os.getcwd(), "new_banner_image.jpg")
+            img = Image.new('RGB', (100, 100), color='blue')
+            img.save(test_file_path)
+            file_input.send_keys(test_file_path)
+            
+            # Uncheck Active checkbox if checked
+            active_checkbox = self.driver.find_element(*self.ACTIVE_CHECKBOX_NEW)
+            if active_checkbox.is_selected():
+                ActionChains(self.driver).move_to_element(active_checkbox).click().perform()
+            
+            # Click Save button
+            save_btn = self.wait.until(
+                EC.element_to_be_clickable(self.SAVE_NEW_BANNER_BUTTON)
+            )
+            ActionChains(self.driver).move_to_element(save_btn).click().perform()
+            
             return True
+        except Exception as e:
+            print("Error adding new banner:", e)
+            return False
+
+    def delete_banner_button_click(self):
+        """Click delete button for the newly created banner and handle alert"""
+        try:
+            from selenium.webdriver.common.action_chains import ActionChains
+            import time
+            
+            # Wait for page to load
+            time.sleep(3)
+            
+            # Find banner with our test title and its delete button
+            banner_rows = self.driver.find_elements(By.XPATH, "//div[contains(., 'Adding new banner with selenium testing')]")
+            
+            if banner_rows:
+                # Find the delete button in the same row as our test banner
+                test_banner_row = banner_rows[0]
+                delete_btn = test_banner_row.find_element(By.XPATH, ".//button[contains(@class, 'text-red-600')]")
+                
+                print("Found test banner, clicking its delete button")
+                ActionChains(self.driver).move_to_element(delete_btn).click().perform()
+                
+                # Handle alert
+                try:
+                    self.wait.until(EC.alert_is_present())
+                    alert = self.driver.switch_to.alert
+                    alert_text = alert.text
+                    print(f"Alert text: {alert_text}")
+                    alert.accept()
+                    
+                    # Wait for deletion to complete
+                    time.sleep(2)
+                    print("Test banner deletion completed")
+                except:
+                    print("No alert appeared after delete click")
+                
+                return True
+            else:
+                print("Test banner not found")
+                return False
         except Exception as e:
             print("Error clicking delete button:", e)
             return False
