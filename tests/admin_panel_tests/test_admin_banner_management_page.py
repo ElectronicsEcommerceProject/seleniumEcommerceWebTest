@@ -47,9 +47,14 @@ def test_admin_banner_management_verification(driver):
     print("✏️ Testing edit button clicking...")
     assert banner_page.clicking_edit_button(), "Edit button clicking failed"
     print("✅ Edit button clicking test completed!")
-    
+      
     # Test button clicking functionality
     print("🔘 Testing button clicking...")
     assert banner_page.clicking_button(), "Button clicking failed"
     print("✅ Button clicking test completed!")
+    
+    # Test banner editing
+    print("📝 Testing banner editing...")
+    assert banner_page.editing_banner(), "Banner editing failed"
+    print("✅ Banner editing test completed!")
     time.sleep(5)
