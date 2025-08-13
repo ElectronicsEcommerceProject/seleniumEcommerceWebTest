@@ -26,6 +26,7 @@ class AdminDashboardPage:
     ORDER_STATUS_DROPDOWN = (By.XPATH, "//select[@class='border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto']")
     SAVE_CHANGES_BUTTON = (By.XPATH, "//button[normalize-space()='Save Changes']")
     ORDER_NUMBER_MODAL_TEXT = (By.XPATH, "//h2[contains(text(), 'Order Details')]")
+    BANNER_MANAGEMENT_LINK = (By.XPATH, "//span[normalize-space()='Banner Management']")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -43,6 +44,18 @@ class AdminDashboardPage:
             return True
         except Exception as e:
             print("Error verifying admin dashboard:", e)
+            return False
+
+    def navigate_to_banner_management(self):
+        """Click on Banner Management link"""
+        try:
+            banner_link = self.wait.until(
+                EC.element_to_be_clickable(self.BANNER_MANAGEMENT_LINK)
+            )
+            banner_link.click()
+            return True
+        except Exception as e:
+            print("Error navigating to banner management:", e)
             return False
 
     def checking_button_working(self):
