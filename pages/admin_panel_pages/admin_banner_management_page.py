@@ -20,6 +20,7 @@ class AdminBannerManagementPage:
     ACTIVE_CHECKBOX = (By.XPATH, "//input[@type='checkbox']")
     FILE_INPUT = (By.XPATH, "//input[@type='file']")
     SAVE_BUTTON = (By.XPATH, "//button[contains(text(), 'Save') or contains(text(), 'Update')]")
+    DELETE_BUTTON = (By.XPATH, "//button[@class='text-red-600 hover:text-red-800 p-1']//svg")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -166,4 +167,31 @@ class AdminBannerManagementPage:
                 alert.accept()
             except:
                 pass
+            return False
+
+    def delete_banner_button_click(self):
+        """Click delete button and handle alert"""
+        try:
+            from selenium.webdriver.common.action_chains import ActionChains
+            # Try to find delete button by different approaches
+            try:
+                delete_btn = self.wait.until(
+                    EC.presence_of_element_located((By.XPATH, "//button[@class='text-red-600 hover:text-red-800 p-1']"))
+                )
+            except:
+                delete_btn = self.wait.until(
+                    EC.presence_of_element_located(self.DELETE_BUTTON)
+                )
+            
+            ActionChains(self.driver).move_to_element(delete_btn).click().perform()
+            
+            # Handle alert
+            self.wait.until(EC.alert_is_present())
+            alert = self.driver.switch_to.alert
+            alert_text = alert.text
+            print(f"Alert text: {alert_text}")
+            alert.accept()
+            return True
+        except Exception as e:
+            print("Error clicking delete button:", e)
             return False
