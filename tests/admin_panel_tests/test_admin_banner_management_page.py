@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+import time
 
 import pytest
 from dotenv import load_dotenv
@@ -42,7 +43,13 @@ def test_admin_banner_management_verification(driver):
     assert banner_page.verifying_bannerManagement(), "Banner management page verification failed"
     print("✅ Banner management page verified successfully!")
     
+    # Test edit button clicking
+    print("✏️ Testing edit button clicking...")
+    assert banner_page.clicking_edit_button(), "Edit button clicking failed"
+    print("✅ Edit button clicking test completed!")
+    
     # Test button clicking functionality
     print("🔘 Testing button clicking...")
     assert banner_page.clicking_button(), "Button clicking failed"
     print("✅ Button clicking test completed!")
+    time.sleep(5)

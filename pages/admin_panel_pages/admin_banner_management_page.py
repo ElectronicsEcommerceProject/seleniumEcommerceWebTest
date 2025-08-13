@@ -11,6 +11,7 @@ class AdminBannerManagementPage:
     DEACTIVATE_BUTTON = (By.XPATH, "(//button[@class='px-3 py-1 rounded text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200'][normalize-space()='Deactivate'])[1]")
     ACTIVATE_BUTTON = (By.XPATH, "(//button[normalize-space()='Activate'])[1]")
     STATUS_SPAN = (By.XPATH, "(//span[@class='px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'])[1]")
+    EDIT_BUTTON = (By.XPATH, "(//*[name()='path'])[23]")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -32,19 +33,20 @@ class AdminBannerManagementPage:
     def clicking_button(self):
         """Click activate or deactivate button and print status text, then revert back"""
         try:
+            from selenium.webdriver.common.action_chains import ActionChains
             # First click
             button = None
             try:
                 button = self.wait.until(
-                    EC.element_to_be_clickable(self.DEACTIVATE_BUTTON)
+                    EC.presence_of_element_located(self.DEACTIVATE_BUTTON)
                 )
             except:
                 button = self.wait.until(
-                    EC.element_to_be_clickable(self.ACTIVATE_BUTTON)
+                    EC.presence_of_element_located(self.ACTIVATE_BUTTON)
                 )
             
             print(f"Button text before clicking: {button.text}")
-            button.click()
+            ActionChains(self.driver).move_to_element(button).click().perform()
             
             status_span = self.wait.until(
                 EC.presence_of_element_located(self.STATUS_SPAN)
@@ -54,15 +56,15 @@ class AdminBannerManagementPage:
             # Second click to revert back
             try:
                 button = self.wait.until(
-                    EC.element_to_be_clickable(self.DEACTIVATE_BUTTON)
+                    EC.presence_of_element_located(self.DEACTIVATE_BUTTON)
                 )
             except:
                 button = self.wait.until(
-                    EC.element_to_be_clickable(self.ACTIVATE_BUTTON)
+                    EC.presence_of_element_located(self.ACTIVATE_BUTTON)
                 )
             
             print(f"Button text before reverting: {button.text}")
-            button.click()
+            ActionChains(self.driver).move_to_element(button).click().perform()
             
             status_span = self.wait.until(
                 EC.presence_of_element_located(self.STATUS_SPAN)
@@ -71,4 +73,17 @@ class AdminBannerManagementPage:
             return True
         except Exception as e:
             print("Error clicking button:", e)
+            return False
+
+    def clicking_edit_button(self):
+        """Click edit button"""
+        try:
+            from selenium.webdriver.common.action_chains import ActionChains
+            edit_btn = self.wait.until(
+                EC.presence_of_element_located(self.EDIT_BUTTON)
+            )
+            ActionChains(self.driver).move_to_element(edit_btn).click().perform()
+            return True
+        except Exception as e:
+            print("Error clicking edit button:", e)
             return False
