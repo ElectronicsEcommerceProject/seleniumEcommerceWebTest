@@ -41,3 +41,8 @@ def test_admin_banner_management_verification(driver):
     
     assert banner_page.verifying_bannerManagement(), "Banner management page verification failed"
     print("✅ Banner management page verified successfully!")
+    
+    # Test button clicking functionality
+    print("🔘 Testing button clicking...")
+    assert banner_page.clicking_button(), "Button clicking failed"
+    print("✅ Button clicking test completed!")
