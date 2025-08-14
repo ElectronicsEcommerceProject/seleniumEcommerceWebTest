@@ -17,6 +17,13 @@ class AdminProductManagementPage:
     CELL_SLUG = (By.XPATH, ".//td[2]//div")
     CELL_ROLE = (By.XPATH, ".//td[3]//div")
     
+    # Brand table locators
+    SEARCH_BRAND_INPUT = (By.XPATH, "//input[@placeholder='Search brands...']")
+    BRAND_CONTAINER = (By.XPATH, "//h2[text()='Brands']/ancestor::div[contains(@class, 'bg-white rounded-xl')]")
+    BRAND_TABLE_BODY = (By.XPATH, ".//tbody[@class='divide-y divide-gray-100']")
+    BRAND_CELL_NAME = (By.XPATH, ".//td[1]//div")
+    BRAND_CELL_SLUG = (By.XPATH, ".//td[2]//div")
+    
     # ================= INIT =================
     def __init__(self, driver):
         self.driver = driver
@@ -112,6 +119,64 @@ class AdminProductManagementPage:
             print(f"❌ Error performing search: {e}")
             return False
 
+    def read_brand_table(self):
+        """Read and print brand table results"""
+        try:
+            brand_container = self.driver.find_element(*self.BRAND_CONTAINER)
+            no_results_msg = brand_container.find_elements(*self.NO_RESULTS_MESSAGE)
+            if no_results_msg:
+                print("❌ No results found - search term not matched")
+                return
+            
+            table_body = brand_container.find_elements(*self.BRAND_TABLE_BODY)
+            if not table_body:
+                print("❌ No results found - table is empty")
+                return
+                
+            table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+            
+            if table_rows:
+                print(f"✅ Found {len(table_rows)} result(s) in Brands table:")
+                for i, row in enumerate(table_rows[:5], 1):
+                    try:
+                        name_cell = row.find_elements(*self.BRAND_CELL_NAME)
+                        slug_cell = row.find_elements(*self.BRAND_CELL_SLUG)
+                        
+                        name = name_cell[0].text.strip() if name_cell else "N/A"
+                        slug = slug_cell[0].text.strip() if slug_cell else "N/A"
+                        
+                        print(f"  {i}. Name: {name}, Slug: {slug}")
+                    except Exception as e:
+                        print(f"  {i}. [Unable to read row data]")
+            else:
+                print("❌ No results found - search returned empty")
+        except Exception as e:
+            print(f"❌ No results found - search term not matched")
+
+    def search_brand_box(self, search_value):
+        """Perform brand search and print results"""
+        print(f"🔍 Searching for '{search_value}' in brands...")
+        try:
+            search_input = self.wait.until(
+                EC.element_to_be_clickable(self.SEARCH_BRAND_INPUT)
+            )
+            search_input.clear()
+            search_input.send_keys(search_value)
+            
+            import time
+            time.sleep(2)
+            
+            self.read_brand_table()
+                
+            return True
+        except Exception as e:
+            print(f"❌ Error performing brand search: {e}")
+            return False
+
     def search_test_category(self):
         """Search for 'test category' in categories"""
-        return self.search_box(self.SEARCH_CATEGORY_INPUT, "test category")
+        return self.search_box(self.SEARCH_CATEGORY_INPUT, "charger")
+        
+    def search_test_brand(self):
+        """Search for 'test brand' in brands"""
+        return self.search_brand_box("vivo")
