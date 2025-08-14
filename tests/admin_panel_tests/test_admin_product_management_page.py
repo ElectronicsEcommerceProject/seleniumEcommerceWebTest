@@ -41,3 +41,6 @@ def test_admin_product_management_page_verification(driver):
     product_management_page.navigate_to_product_management()
     
     assert product_management_page.verifying_productManagement(), "Product Management page verification failed"
+    
+    # Search for test category
+    product_management_page.search_test_category()
