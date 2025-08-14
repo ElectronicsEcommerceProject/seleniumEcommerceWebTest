@@ -34,6 +34,10 @@ class AdminBannerManagementPage:
     BANNER_IMAGE_INPUT = (By.XPATH, "//input[@type='file'][@accept='image/*']")
     ACTIVE_CHECKBOX_NEW = (By.XPATH, "//input[@id='is_active']")
     SAVE_NEW_BANNER_BUTTON = (By.XPATH, "//button[@class='bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-green-700']")
+    
+    # Banner Cards and Delete functionality
+    TEST_BANNER_CARDS = (By.XPATH, "//div[@class='bg-white rounded-lg shadow-md overflow-hidden'][.//h3[contains(text(), 'Adding new banner with selenium testing')]]")
+    DELETE_BUTTON_IN_CARD = (By.XPATH, ".//button[@class='text-red-600 hover:text-red-800 p-1']")
 
     # ================= INIT =================
     def __init__(self, driver):
@@ -297,7 +301,7 @@ class AdminBannerManagementPage:
             time.sleep(3)
             
             # Find banner cards with our test title
-            banner_cards = self.driver.find_elements(By.XPATH, "//div[@class='bg-white rounded-lg shadow-md overflow-hidden'][.//h3[contains(text(), 'Adding new banner with selenium testing')]]")
+            banner_cards = self.driver.find_elements(*self.TEST_BANNER_CARDS)
             
             if banner_cards:
                 print(f"Found {len(banner_cards)} test banner cards")
@@ -307,7 +311,7 @@ class AdminBannerManagementPage:
                 print(test_banner_card.text)
                 
                 # Find the delete button within this specific banner card
-                delete_btn = test_banner_card.find_element(By.XPATH, ".//button[@class='text-red-600 hover:text-red-800 p-1']")
+                delete_btn = test_banner_card.find_element(*self.DELETE_BUTTON_IN_CARD)
                 
                 print("Found test banner card, clicking its delete button")
                 self.driver.execute_script("arguments[0].click();", delete_btn)
@@ -326,7 +330,7 @@ class AdminBannerManagementPage:
                 time.sleep(3)
                 
                 # Check if banner was deleted
-                remaining_cards = self.driver.find_elements(By.XPATH, "//div[@class='bg-white rounded-lg shadow-md overflow-hidden'][.//h3[contains(text(), 'Adding new banner with selenium testing')]]")
+                remaining_cards = self.driver.find_elements(*self.TEST_BANNER_CARDS)
                 final_count = len(remaining_cards)
                 
                 print(f"Before: {len(banner_cards)}, After: {final_count}")
