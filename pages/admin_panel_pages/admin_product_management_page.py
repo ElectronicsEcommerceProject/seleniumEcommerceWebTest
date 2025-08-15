@@ -44,6 +44,13 @@ class AdminProductManagementPage:
     VARIANT_CELL_DISCOUNT = (By.XPATH, ".//td[5]//div")
     VARIANT_CELL_MIN_QTY = (By.XPATH, ".//td[6]//div")
     
+    # Attribute values table locators
+    SEARCH_ATTRIBUTE_INPUT = (By.XPATH, "//input[@placeholder='Search attribute values...']")
+    ATTRIBUTE_CONTAINER = (By.XPATH, "//h2[text()='Attribute Values']/ancestor::div[contains(@class, 'bg-white rounded-xl')]")
+    ATTRIBUTE_TABLE_BODY = (By.XPATH, ".//tbody[@class='divide-y divide-gray-100']")
+    ATTRIBUTE_CELL_ATTRIBUTE = (By.XPATH, ".//td[1]//div")
+    ATTRIBUTE_CELL_VALUE = (By.XPATH, ".//td[2]//div")
+    
     # ================= INIT =================
     def __init__(self, driver):
         self.driver = driver
@@ -351,3 +358,61 @@ class AdminProductManagementPage:
     def search_test_variant(self):
         """Search for 'test variant' in product variants"""
         return self.search_variant_box("test variant")
+    def read_attribute_table(self):
+        """Read and print attribute values table results"""
+        try:
+            attribute_container = self.driver.find_element(*self.ATTRIBUTE_CONTAINER)
+            no_results_msg = attribute_container.find_elements(*self.NO_RESULTS_MESSAGE)
+            if no_results_msg:
+                print("❌ No results found - search term not matched")
+                return
+            
+            table_body = attribute_container.find_elements(*self.ATTRIBUTE_TABLE_BODY)
+            if not table_body:
+                print("❌ No results found - table is empty")
+                return
+                
+            table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+            
+            if table_rows:
+                print(f"✅ Found {len(table_rows)} result(s) in Attribute Values table:")
+                for i, row in enumerate(table_rows[:5], 1):
+                    try:
+                        attribute_cell = row.find_elements(*self.ATTRIBUTE_CELL_ATTRIBUTE)
+                        value_cell = row.find_elements(*self.ATTRIBUTE_CELL_VALUE)
+                        
+                        attribute = attribute_cell[0].text.strip() if attribute_cell else "N/A"
+                        value = value_cell[0].text.strip() if value_cell else "N/A"
+                        
+                        print(f"  {i}. Attribute: {attribute}, Value: {value}")
+                    except Exception as e:
+                        print(f"  {i}. [Unable to read row data]")
+            else:
+                print("❌ No results found - search returned empty")
+        except Exception as e:
+            print(f"❌ No results found - search term not matched")
+
+    def search_attribute_box(self, search_value):
+        """Perform attribute values search and print results"""
+        print(f"🔍 Searching for '{search_value}' in attribute values...")
+        print(f"📝 Search term entered: '{search_value}'")
+        try:
+            search_input = self.wait.until(
+                EC.element_to_be_clickable(self.SEARCH_ATTRIBUTE_INPUT)
+            )
+            search_input.clear()
+            search_input.send_keys(search_value)
+            
+            import time
+            time.sleep(2)
+            
+            self.read_attribute_table()
+                
+            return True
+        except Exception as e:
+            print(f"❌ Error performing attribute search: {e}")
+            return False
+
+    def search_test_attribute(self):
+        """Search for 'test attribute' in attribute values"""
+        return self.search_attribute_box("test attribute")

@@ -53,3 +53,6 @@ def test_admin_product_management_page_verification(driver):
     
     # Search for test variant
     product_management_page.search_test_variant()
+    
+    # Search for test attribute
+    product_management_page.search_test_attribute()
