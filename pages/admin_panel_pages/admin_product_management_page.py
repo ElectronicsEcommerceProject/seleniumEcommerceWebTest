@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 
 class AdminProductManagementPage:
@@ -9,9 +10,10 @@ class AdminProductManagementPage:
     PRODUCT_MANAGEMENT_LINK = (By.XPATH, "//span[normalize-space()='Product Management']")
     PRODUCT_MANAGEMENT_TITLE = (By.XPATH, "//h1[normalize-space()='Product Management']")
     RESET_FILTERS_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-gray-200') and contains(text(), 'Reset Filters')]")
+    EDIT_BUTTON = (By.XPATH, "//button[@aria-label='Edit categories']")
     SEARCH_CATEGORY_INPUT = (By.XPATH, "//input[@placeholder='Search categories...']")
     CATEGORY_TABLE = (By.XPATH, "//body/div[@id='root']/div[@class='bg-gray-100 font-sans min-h-screen flex flex-col']/div[@class='flex flex-1']/main[@class='flex-1 pt-/div[@class='min-h-screen bg-gray-100 p-2 sm:p-4 md:p-6']/div[@class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6']/div[1]")
-    CATEGORY_CONTAINER = (By.XPATH, "//h2[text()='Categories']/ancestor::div[contains(@class, 'bg-white rounded-xl')]")
+    CATEGORY_CONTAINER = (By.XPATH, "//h2[contains(text(),'Categories')]/ancestor::div[contains(@class, 'bg-white')]")
     CATEGORY_TABLE_BODY = (By.XPATH, ".//tbody[@class='divide-y divide-gray-100']")
     TABLE_ROWS = (By.XPATH, ".//tr")
     NO_RESULTS_MESSAGE = (By.XPATH, ".//*[contains(text(), 'No') and contains(text(), 'found')]")
@@ -64,6 +66,11 @@ class AdminProductManagementPage:
         self.product_data = []
         self.variant_data = []
         self.attribute_data = []
+        
+        # Variables to store original values for editing
+        self.original_name = ""
+        self.original_slug = ""
+        self.original_role = ""
 
     # ================= METHODS =================
 
@@ -887,6 +894,177 @@ class AdminProductManagementPage:
             return True
         except Exception as e:
             print(f"❌ Error testing attribute filter: {e}")
+            return False
+
+    def edit_category_and_revert(self):
+        """Edit first category and then revert back to original values"""
+        try:
+            import time
+            time.sleep(2)
+            
+            # Try multiple locators for category container
+            category_container = None
+            locators = [
+                (By.XPATH, "//h2[contains(text(),'Categories')]/ancestor::div[contains(@class, 'bg-white')]"),
+                (By.XPATH, "//h2[text()='Categories']/parent::div/parent::div"),
+                (By.XPATH, "//div[.//h2[contains(text(),'Categories')]]"),
+                (By.XPATH, "//div[contains(@class,'bg-white') and .//h2[contains(text(),'Categories')]]"),
+            ]
+            
+            for locator in locators:
+                try:
+                    category_container = self.driver.find_element(*locator)
+                    print(f"✅ Found category container with locator: {locator[1]}")
+                    break
+                except:
+                    continue
+            
+            if not category_container:
+                print("❌ Could not find category container")
+                return False
+            
+            # Find table body and rows
+            table_body = category_container.find_element(*self.CATEGORY_TABLE_BODY)
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            if rows:
+                first_row = rows[0]
+                
+                # Store original values
+                name_cell = first_row.find_elements(*self.CELL_NAME)
+                slug_cell = first_row.find_elements(*self.CELL_SLUG)
+                role_cell = first_row.find_elements(*self.CELL_ROLE)
+                
+                self.original_name = name_cell[0].text.strip() if name_cell else ""
+                self.original_slug = slug_cell[0].text.strip() if slug_cell else ""
+                self.original_role = role_cell[0].text.strip() if role_cell else ""
+                
+                print(f"📝 Original values - Name: {self.original_name}, Slug: {self.original_slug}, Role: {self.original_role}")
+                
+                # Click edit button
+                edit_button = first_row.find_element(*self.EDIT_BUTTON)
+                self.driver.execute_script("arguments[0].click();", edit_button)
+                
+                time.sleep(2)  # Wait for edit form to load
+                
+                # Edit the values (add "_edited" suffix)
+                name_input = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='name' or contains(@placeholder,'name') or contains(@id,'name')]")))
+                slug_input = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='slug' or contains(@placeholder,'slug') or contains(@id,'slug')]")))
+                
+                # Clear and enter new values
+                self.driver.execute_script("arguments[0].value = '';", name_input)
+                name_input.send_keys(self.original_name + "_edited")
+                
+                self.driver.execute_script("arguments[0].value = '';", slug_input)
+                slug_input.send_keys(self.original_slug + "_edited")
+                
+                # Handle role dropdown
+                try:
+                    role_dropdown = self.driver.find_element(By.XPATH, "//select[@name='target_role']")
+                    select = Select(role_dropdown)
+                    
+                    # Select different role (if original was 'both', select 'customer', otherwise select 'both')
+                    if self.original_role.lower() == 'both':
+                        select.select_by_value('customer')
+                    else:
+                        select.select_by_value('both')
+                    print(f"✅ Changed role from {self.original_role} to {'customer' if self.original_role.lower() == 'both' else 'both'}")
+                except Exception as e:
+                    print(f"⚠️ Could not change role dropdown: {e}")
+                
+                # Save changes
+                save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save') or contains(text(), 'Update')]")
+                save_button.click()
+                
+                time.sleep(3)  # Wait for save and potential alert
+                
+                print("✅ Category edited successfully")
+                
+                # Now revert back to original values
+                self.revert_category_edit()
+                
+            return True
+        except Exception as e:
+            print(f"❌ Error editing category: {e}")
+            return False
+    
+    def revert_category_edit(self):
+        """Revert category back to original values"""
+        try:
+            import time
+            time.sleep(3)  # Wait longer for page to refresh
+            
+            # Try multiple locators for category container
+            category_container = None
+            locators = [
+                (By.XPATH, "//h2[contains(text(),'Categories')]/ancestor::div[contains(@class, 'bg-white')]"),
+                (By.XPATH, "//h2[text()='Categories']/parent::div/parent::div"),
+                (By.XPATH, "//div[.//h2[contains(text(),'Categories')]]"),
+                (By.XPATH, "//div[contains(@class,'bg-white') and .//h2[contains(text(),'Categories')]]"),
+            ]
+            
+            for locator in locators:
+                try:
+                    category_container = self.wait.until(EC.presence_of_element_located(locator))
+                    break
+                except:
+                    continue
+            
+            if not category_container:
+                print("❌ Could not find category container for revert")
+                return False
+            
+            # Wait for table to load and find the edited category
+            table_body = self.wait.until(EC.presence_of_element_located((By.XPATH, ".//tbody[@class='divide-y divide-gray-100']")))
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            # Find row with edited name
+            for row in rows:
+                name_cell = row.find_elements(*self.CELL_NAME)
+                if name_cell and "_edited" in name_cell[0].text:
+                    edit_button = row.find_element(*self.EDIT_BUTTON)
+                    self.driver.execute_script("arguments[0].click();", edit_button)
+                    break
+            
+            time.sleep(2)
+            
+            # Revert to original values
+            name_input = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='name' or contains(@placeholder,'name') or contains(@id,'name')]")))
+            slug_input = self.wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='slug' or contains(@placeholder,'slug') or contains(@id,'slug')]")))
+            
+            self.driver.execute_script("arguments[0].value = '';", name_input)
+            name_input.send_keys(self.original_name)
+            
+            self.driver.execute_script("arguments[0].value = '';", slug_input)
+            slug_input.send_keys(self.original_slug)
+            
+            # Revert role dropdown to original value
+            try:
+                role_dropdown = self.driver.find_element(By.XPATH, "//select[@name='target_role']")
+                select = Select(role_dropdown)
+                
+                # Set original role value
+                if self.original_role.lower() == 'both':
+                    select.select_by_value('both')
+                elif self.original_role.lower() == 'customer':
+                    select.select_by_value('customer')
+                else:
+                    select.select_by_value('retailer')
+                print(f"✅ Reverted role back to {self.original_role}")
+            except Exception as e:
+                print(f"⚠️ Could not revert role dropdown: {e}")
+            
+            # Save reverted changes
+            save_button = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Save') or contains(text(), 'Update')]")
+            save_button.click()
+            
+            time.sleep(3)
+            
+            print("✅ Category reverted to original values successfully")
+            
+            return True
+        except Exception as e:
+            print(f"❌ Error reverting category: {e}")
             return False
 
     def click_brand_and_test_filter(self):

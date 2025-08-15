@@ -80,3 +80,6 @@ def test_admin_product_management_page_verification(driver):
     
     # Test attribute filter by clicking on an attribute
     product_management_page.click_attribute_and_test_filter()
+    
+    # Test category edit and revert functionality
+    product_management_page.edit_category_and_revert()
