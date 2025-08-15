@@ -71,3 +71,6 @@ def test_admin_product_management_page_verification(driver):
     
     # Test brand filter by clicking on a brand
     product_management_page.click_brand_and_test_filter()
+    
+    # Test product filter by clicking on a product
+    product_management_page.click_product_and_test_filter()

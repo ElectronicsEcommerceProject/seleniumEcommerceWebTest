@@ -724,6 +724,58 @@ class AdminProductManagementPage:
             pass
         return 0
 
+    def click_product_and_test_filter(self):
+        """Click on first available product and test if filter is working"""
+        try:
+            # Store original counts
+            original_categories = len(self.category_data)
+            original_brands = len(self.brand_data)
+            original_variants = len(self.variant_data)
+            original_attributes = len(self.attribute_data)
+            
+            # Find and click first product
+            product_container = self.driver.find_element(*self.PRODUCT_CONTAINER)
+            table_body = product_container.find_element(*self.PRODUCT_TABLE_BODY)
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            if rows:
+                first_row = rows[0]
+                name_cell = first_row.find_elements(*self.PRODUCT_CELL_NAME)
+                if name_cell:
+                    product_name = name_cell[0].text.strip()
+                    print(f"🔍 Clicking on product: {product_name}")
+                    self.driver.execute_script("arguments[0].click();", name_cell[0])
+                    
+                    import time
+                    time.sleep(3)  # Wait for filter to apply
+                    
+                    # Count after product filter
+                    filtered_categories = self.count_filtered_categories()
+                    filtered_brands = self.count_filtered_brands()
+                    filtered_variants = self.count_filtered_variants()
+                    filtered_attributes = self.count_filtered_attributes()
+                    
+                    print(f"📊 PRODUCT FILTER TEST RESULTS for {product_name}:")
+                    print(f"📁 Categories: {original_categories} -> {filtered_categories}")
+                    print(f"🏷️ Brands: {original_brands} -> {filtered_brands}")
+                    print(f"🔧 Variants: {original_variants} -> {filtered_variants}")
+                    print(f"⚙️ Attributes: {original_attributes} -> {filtered_attributes}")
+                    
+                    # Test if product filter is working
+                    if (filtered_categories <= original_categories and
+                        filtered_brands <= original_brands and
+                        filtered_variants <= original_variants and 
+                        filtered_attributes <= original_attributes):
+                        print("✅ PASS: Product filter is working correctly")
+                        self.reset_filters()
+                    else:
+                        print("❌ FAIL: Product filter is not working")
+                        
+            return True
+        except Exception as e:
+            print(f"❌ Error testing product filter: {e}")
+            return False
+
     def click_brand_and_test_filter(self):
         """Click on first available brand and test if filter is working"""
         try:
