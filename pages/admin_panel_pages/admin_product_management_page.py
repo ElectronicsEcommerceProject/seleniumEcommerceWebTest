@@ -727,6 +727,9 @@ class AdminProductManagementPage:
     def click_product_and_test_filter(self):
         """Click on first available product and test if filter is working"""
         try:
+            # Reset filters first
+            self.reset_filters()
+            
             # Store original counts
             original_categories = len(self.category_data)
             original_brands = len(self.brand_data)
@@ -776,9 +779,122 @@ class AdminProductManagementPage:
             print(f"❌ Error testing product filter: {e}")
             return False
 
+    def click_variant_and_test_filter(self):
+        """Click on first available variant and test if filter is working"""
+        try:
+            # Reset filters first
+            self.reset_filters()
+            
+            # Store original counts
+            original_categories = len(self.category_data)
+            original_brands = len(self.brand_data)
+            original_products = len(self.product_data)
+            original_attributes = len(self.attribute_data)
+            
+            # Find and click first variant
+            variant_container = self.driver.find_element(*self.VARIANT_CONTAINER)
+            table_body = variant_container.find_element(*self.VARIANT_TABLE_BODY)
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            if rows:
+                first_row = rows[0]
+                name_cell = first_row.find_elements(*self.VARIANT_CELL_NAME)
+                if name_cell:
+                    variant_name = name_cell[0].text.strip()
+                    print(f"🔍 Clicking on variant: {variant_name}")
+                    self.driver.execute_script("arguments[0].click();", name_cell[0])
+                    
+                    import time
+                    time.sleep(3)  # Wait for filter to apply
+                    
+                    # Count after variant filter
+                    filtered_categories = self.count_filtered_categories()
+                    filtered_brands = self.count_filtered_brands()
+                    filtered_products = self.count_filtered_products()
+                    filtered_attributes = self.count_filtered_attributes()
+                    
+                    print(f"📊 VARIANT FILTER TEST RESULTS for {variant_name}:")
+                    print(f"📁 Categories: {original_categories} -> {filtered_categories}")
+                    print(f"🏷️ Brands: {original_brands} -> {filtered_brands}")
+                    print(f"📦 Products: {original_products} -> {filtered_products}")
+                    print(f"⚙️ Attributes: {original_attributes} -> {filtered_attributes}")
+                    
+                    # Test if variant filter is working
+                    if (filtered_categories <= original_categories and
+                        filtered_brands <= original_brands and
+                        filtered_products <= original_products and 
+                        filtered_attributes <= original_attributes):
+                        print("✅ PASS: Variant filter is working correctly")
+                        self.reset_filters()
+                    else:
+                        print("❌ FAIL: Variant filter is not working")
+                        
+            return True
+        except Exception as e:
+            print(f"❌ Error testing variant filter: {e}")
+            return False
+
+    def click_attribute_and_test_filter(self):
+        """Click on first available attribute and test if filter is working"""
+        try:
+            # Reset filters first
+            self.reset_filters()
+            
+            # Store original counts
+            original_categories = len(self.category_data)
+            original_brands = len(self.brand_data)
+            original_products = len(self.product_data)
+            original_variants = len(self.variant_data)
+            
+            # Find and click first attribute
+            attribute_container = self.driver.find_element(*self.ATTRIBUTE_CONTAINER)
+            table_body = attribute_container.find_element(*self.ATTRIBUTE_TABLE_BODY)
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            if rows:
+                first_row = rows[0]
+                name_cell = first_row.find_elements(*self.ATTRIBUTE_CELL_ATTRIBUTE)
+                if name_cell:
+                    attribute_name = name_cell[0].text.strip()
+                    print(f"🔍 Clicking on attribute: {attribute_name}")
+                    self.driver.execute_script("arguments[0].click();", name_cell[0])
+                    
+                    import time
+                    time.sleep(3)  # Wait for filter to apply
+                    
+                    # Count after attribute filter
+                    filtered_categories = self.count_filtered_categories()
+                    filtered_brands = self.count_filtered_brands()
+                    filtered_products = self.count_filtered_products()
+                    filtered_variants = self.count_filtered_variants()
+                    
+                    print(f"📊 ATTRIBUTE FILTER TEST RESULTS for {attribute_name}:")
+                    print(f"📁 Categories: {original_categories} -> {filtered_categories}")
+                    print(f"🏷️ Brands: {original_brands} -> {filtered_brands}")
+                    print(f"📦 Products: {original_products} -> {filtered_products}")
+                    print(f"🔧 Variants: {original_variants} -> {filtered_variants}")
+                    
+                    # Test if attribute filter is working
+                    if (filtered_categories <= original_categories and
+                        filtered_brands <= original_brands and
+                        filtered_products <= original_products and 
+                        filtered_variants <= original_variants):
+                        print("✅ PASS: Attribute filter is working correctly")
+                        self.reset_filters()
+                    else:
+                        print("❌ FAIL: Attribute filter is not working")
+                        
+            return True
+        except Exception as e:
+            print(f"❌ Error testing attribute filter: {e}")
+            return False
+
     def click_brand_and_test_filter(self):
         """Click on first available brand and test if filter is working"""
         try:
+            # Reset filters first
+            self.reset_filters()
+            
             # Store original counts
             original_categories = len(self.category_data)
             original_products = len(self.product_data)

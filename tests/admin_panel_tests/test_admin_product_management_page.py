@@ -74,3 +74,9 @@ def test_admin_product_management_page_verification(driver):
     
     # Test product filter by clicking on a product
     product_management_page.click_product_and_test_filter()
+    
+    # Test variant filter by clicking on a variant
+    product_management_page.click_variant_and_test_filter()
+    
+    # Test attribute filter by clicking on an attribute
+    product_management_page.click_attribute_and_test_filter()
