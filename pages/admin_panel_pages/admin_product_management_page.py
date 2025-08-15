@@ -8,6 +8,7 @@ class AdminProductManagementPage:
     # ================= LOCATORS =================
     PRODUCT_MANAGEMENT_LINK = (By.XPATH, "//span[normalize-space()='Product Management']")
     PRODUCT_MANAGEMENT_TITLE = (By.XPATH, "//h1[normalize-space()='Product Management']")
+    RESET_FILTERS_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-gray-200') and contains(text(), 'Reset Filters')]")
     SEARCH_CATEGORY_INPUT = (By.XPATH, "//input[@placeholder='Search categories...']")
     CATEGORY_TABLE = (By.XPATH, "//body/div[@id='root']/div[@class='bg-gray-100 font-sans min-h-screen flex flex-col']/div[@class='flex flex-1']/main[@class='flex-1 pt-/div[@class='min-h-screen bg-gray-100 p-2 sm:p-4 md:p-6']/div[@class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6']/div[1]")
     CATEGORY_CONTAINER = (By.XPATH, "//h2[text()='Categories']/ancestor::div[contains(@class, 'bg-white rounded-xl')]")
@@ -654,6 +655,7 @@ class AdminProductManagementPage:
                 filtered_variants <= original_variants and 
                 filtered_attributes <= original_attributes):
                 print("✅ PASS: Category filter is working correctly")
+                self.reset_filters()
             else:
                 print("❌ FAIL: Category filter is not working")
                 
@@ -709,6 +711,25 @@ class AdminProductManagementPage:
         except:
             pass
         return 0
+
+    def reset_filters(self):
+        """Click reset filters button to clear all filters"""
+        try:
+            reset_button = self.wait.until(
+                EC.presence_of_element_located(self.RESET_FILTERS_BUTTON)
+            )
+            # Scroll to button and click using JavaScript
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", reset_button)
+            self.driver.execute_script("arguments[0].click();", reset_button)
+            
+            import time
+            time.sleep(2)  # Wait for filters to clear
+            
+            print("✅ Filter is cleared")
+            return True
+        except Exception as e:
+            print(f"❌ Error clearing filters: {e}")
+            return False
 
     def print_all_table_data(self):
         """Print summary of all table data collected"""
