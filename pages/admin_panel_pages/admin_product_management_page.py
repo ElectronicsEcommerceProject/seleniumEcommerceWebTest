@@ -711,6 +711,69 @@ class AdminProductManagementPage:
         except:
             pass
         return 0
+    
+    def count_filtered_categories(self):
+        """Count categories after filter is applied"""
+        try:
+            category_container = self.driver.find_element(*self.CATEGORY_CONTAINER)
+            table_body = category_container.find_elements(*self.CATEGORY_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                return len(table_rows)
+        except:
+            pass
+        return 0
+
+    def click_brand_and_test_filter(self):
+        """Click on first available brand and test if filter is working"""
+        try:
+            # Store original counts
+            original_categories = len(self.category_data)
+            original_products = len(self.product_data)
+            original_variants = len(self.variant_data)
+            original_attributes = len(self.attribute_data)
+            
+            # Find and click first brand
+            brand_container = self.driver.find_element(*self.BRAND_CONTAINER)
+            table_body = brand_container.find_element(*self.BRAND_TABLE_BODY)
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            if rows:
+                first_row = rows[0]
+                name_cell = first_row.find_elements(*self.BRAND_CELL_NAME)
+                if name_cell:
+                    brand_name = name_cell[0].text.strip()
+                    print(f"🔍 Clicking on brand: {brand_name}")
+                    self.driver.execute_script("arguments[0].click();", name_cell[0])
+                    
+                    import time
+                    time.sleep(3)  # Wait for filter to apply
+                    
+                    # Count after brand filter
+                    filtered_categories = self.count_filtered_categories()
+                    filtered_products = self.count_filtered_products()
+                    filtered_variants = self.count_filtered_variants()
+                    filtered_attributes = self.count_filtered_attributes()
+                    
+                    print(f"📊 BRAND FILTER TEST RESULTS for {brand_name}:")
+                    print(f"📁 Categories: {original_categories} -> {filtered_categories}")
+                    print(f"📦 Products: {original_products} -> {filtered_products}")
+                    print(f"🔧 Variants: {original_variants} -> {filtered_variants}")
+                    print(f"⚙️ Attributes: {original_attributes} -> {filtered_attributes}")
+                    
+                    # Test if brand filter is working
+                    if (filtered_categories <= original_categories and
+                        filtered_products <= original_products and 
+                        filtered_variants <= original_variants and 
+                        filtered_attributes <= original_attributes):
+                        print("✅ PASS: Brand filter is working correctly")
+                    else:
+                        print("❌ FAIL: Brand filter is not working")
+                        
+            return True
+        except Exception as e:
+            print(f"❌ Error testing brand filter: {e}")
+            return False
 
     def reset_filters(self):
         """Click reset filters button to clear all filters"""

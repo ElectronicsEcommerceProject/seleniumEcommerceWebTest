@@ -68,3 +68,6 @@ def test_admin_product_management_page_verification(driver):
     if valid_categories:
         first_category = valid_categories[0]
         product_management_page.click_category_and_test_filter(first_category)
+    
+    # Test brand filter by clicking on a brand
+    product_management_page.click_brand_and_test_filter()
