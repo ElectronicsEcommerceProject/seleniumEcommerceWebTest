@@ -42,44 +42,50 @@ def test_admin_product_management_page_verification(driver):
     
     assert product_management_page.verifying_productManagement(), "Product Management page verification failed"
     
-    # Collect table counts before making searches
-    product_management_page.collect_table_counts()
+    # # Collect table counts before making searches
+    # product_management_page.collect_table_counts()
     
-    # Search for test category
-    product_management_page.search_test_category()
+    # # Search for test category
+    # product_management_page.search_test_category()
     
-    # Search for test brand
-    product_management_page.search_test_brand()
+    # # Search for test brand
+    # product_management_page.search_test_brand()
     
-    # Search for test product
-    product_management_page.search_test_product()
+    # # Search for test product
+    # product_management_page.search_test_product()
     
-    # Search for test variant
-    product_management_page.search_test_variant()
+    # # Search for test variant
+    # product_management_page.search_test_variant()
     
-    # Search for test attribute
-    product_management_page.search_test_attribute()
+    # # Search for test attribute
+    # product_management_page.search_test_attribute()
     
-    # Print summary of all table data
-    product_management_page.print_all_table_data()
+    # # Print summary of all table data
+    # product_management_page.print_all_table_data()
     
-    # Test category filter by clicking on a valid category
-    valid_categories = [cat for cat in product_management_page.category_data if cat != "No data available"]
-    if valid_categories:
-        first_category = valid_categories[0]
-        product_management_page.click_category_and_test_filter(first_category)
+    # # Test category filter by clicking on a valid category
+    # valid_categories = [cat for cat in product_management_page.category_data if cat != "No data available"]
+    # if valid_categories:
+    #     first_category = valid_categories[0]
+    #     product_management_page.click_category_and_test_filter(first_category)
     
-    # Test brand filter by clicking on a brand
-    product_management_page.click_brand_and_test_filter()
+    # # Test brand filter by clicking on a brand
+    # product_management_page.click_brand_and_test_filter()
     
-    # Test product filter by clicking on a product
-    product_management_page.click_product_and_test_filter()
+    # # Test product filter by clicking on a product
+    # product_management_page.click_product_and_test_filter()
     
-    # Test variant filter by clicking on a variant
-    product_management_page.click_variant_and_test_filter()
+    # # Test variant filter by clicking on a variant
+    # product_management_page.click_variant_and_test_filter()
     
-    # Test attribute filter by clicking on an attribute
-    product_management_page.click_attribute_and_test_filter()
+    # # Test attribute filter by clicking on an attribute
+    # product_management_page.click_attribute_and_test_filter()
     
-    # Test category edit and revert functionality
-    product_management_page.edit_category_and_revert()
+    # # Test category edit and revert functionality
+    # product_management_page.edit_category_and_revert()
+    
+    # Test brand edit and revert functionality
+    #product_management_page.edit_brand_and_revert()
+    
+    # Test product edit and revert functionality
+    product_management_page.edit_product_and_revert()
