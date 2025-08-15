@@ -47,3 +47,9 @@ def test_admin_product_management_page_verification(driver):
     
     # Search for test brand
     product_management_page.search_test_brand()
+    
+    # Search for test product
+    product_management_page.search_test_product()
+    
+    # Search for test variant
+    product_management_page.search_test_variant()
