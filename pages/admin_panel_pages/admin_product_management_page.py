@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 
 class AdminProductManagementPage:
@@ -55,6 +56,13 @@ class AdminProductManagementPage:
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, 10)
+        
+        # Global variables to store table data
+        self.category_data = []
+        self.brand_data = []
+        self.product_data = []
+        self.variant_data = []
+        self.attribute_data = []
 
     # ================= METHODS =================
 
@@ -83,46 +91,74 @@ class AdminProductManagementPage:
             print("❌ Error verifying Product management page:", e)
             return False
 
-    def read_category_table(self):
-        """Read and print category table results"""
+    def collect_table_counts(self):
+        """Count total rows in each table before searches"""
+        print("📁 Collecting table row counts...")
+        
+        import time
+        time.sleep(2)  # Wait for tables to load
+        
+        # Count category rows
         try:
-            # Target only the Categories table by finding the container with Categories heading
-            category_container = self.driver.find_element(*self.CATEGORY_CONTAINER)
-            
-            # Check for "No results found" message first
-            no_results_msg = category_container.find_elements(*self.NO_RESULTS_MESSAGE)
-            if no_results_msg:
-                print("❌ No results found - search term not matched")
-                return
-            
-            # Check if table exists
+            category_container = self.wait.until(EC.presence_of_element_located(self.CATEGORY_CONTAINER))
             table_body = category_container.find_elements(*self.CATEGORY_TABLE_BODY)
-            if not table_body:
-                print("❌ No results found - table is empty")
-                return
-                
-            table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
-            
-            if table_rows:
-                print(f"✅ Found {len(table_rows)} result(s) in Categories table:")
-                for i, row in enumerate(table_rows[:5], 1):  # Show first 5 results
-                    try:
-                        # Check if each cell exists before reading
-                        name_cell = row.find_elements(*self.CELL_NAME)
-                        slug_cell = row.find_elements(*self.CELL_SLUG)
-                        role_cell = row.find_elements(*self.CELL_ROLE)
-                        
-                        name = name_cell[0].text.strip() if name_cell else "N/A"
-                        slug = slug_cell[0].text.strip() if slug_cell else "N/A"
-                        role = role_cell[0].text.strip() if role_cell else "N/A"
-                        
-                        print(f"  {i}. Name: {name}, Slug: {slug}, Role: {role}")
-                    except Exception as e:
-                        print(f"  {i}. [Unable to read row data]")
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                print(f"📁 Categories table: {len(table_rows)} items")
             else:
-                print("❌ No results found - search returned empty")
-        except Exception as e:
-            print(f"❌ No results found - search term not matched")
+                print("📁 Categories table: 0 items")
+        except:
+            print("📁 Categories table: 0 items")
+            
+        # Count brand rows
+        try:
+            brand_container = self.driver.find_element(*self.BRAND_CONTAINER)
+            table_body = brand_container.find_elements(*self.BRAND_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                print(f"🏷️ Brands table: {len(table_rows)} items")
+            else:
+                print("🏷️ Brands table: 0 items")
+        except:
+            print("🏷️ Brands table: 0 items")
+            
+        # Count product rows
+        try:
+            product_container = self.driver.find_element(*self.PRODUCT_CONTAINER)
+            table_body = product_container.find_elements(*self.PRODUCT_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                print(f"📦 Products table: {len(table_rows)} items")
+            else:
+                print("📦 Products table: 0 items")
+        except:
+            print("📦 Products table: 0 items")
+            
+        # Count variant rows
+        try:
+            variant_container = self.driver.find_element(*self.VARIANT_CONTAINER)
+            table_body = variant_container.find_elements(*self.VARIANT_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                print(f"🔧 Variants table: {len(table_rows)} items")
+            else:
+                print("🔧 Variants table: 0 items")
+        except:
+            print("🔧 Variants table: 0 items")
+            
+        # Count attribute rows
+        try:
+            attribute_container = self.driver.find_element(*self.ATTRIBUTE_CONTAINER)
+            table_body = attribute_container.find_elements(*self.ATTRIBUTE_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                print(f"⚙️ Attributes table: {len(table_rows)} items")
+            else:
+                print("⚙️ Attributes table: 0 items")
+        except:
+            print("⚙️ Attributes table: 0 items")
+            
+        print("✅ Table counts collected successfully")
 
     def search_box(self, search_xpath, search_value):
         """Perform search using provided xpath and value, then print results"""
@@ -135,16 +171,89 @@ class AdminProductManagementPage:
             search_input.clear()
             search_input.send_keys(search_value)
             
-            # Wait a moment for search results to load
             import time
             time.sleep(2)
             
-            # Read table results
             self.read_category_table()
+            
+            # Clear search box using backspace keys
+            search_input.send_keys(Keys.CONTROL + "a")
+            search_input.send_keys(Keys.BACKSPACE)
+            time.sleep(2)
+            
+            # Collect all data after clearing search
+            self.collect_all_category_data()
                 
             return True
         except Exception as e:
             print(f"❌ Error performing search: {e}")
+            return False
+
+    def read_category_table(self):
+        """Read and print category table results"""
+        try:
+            category_container = self.driver.find_element(*self.CATEGORY_CONTAINER)
+            no_results_msg = category_container.find_elements(*self.NO_RESULTS_MESSAGE)
+            if no_results_msg:
+                print("❌ No results found - search term not matched")
+                return
+            
+            table_body = category_container.find_elements(*self.CATEGORY_TABLE_BODY)
+            if not table_body:
+                print("❌ No results found - table is empty")
+                return
+                
+            table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+            
+            if table_rows:
+                print(f"✅ Found {len(table_rows)} result(s) in Categories table:")
+                for i, row in enumerate(table_rows, 1):
+                    try:
+                        name_cell = row.find_elements(*self.CELL_NAME)
+                        name = name_cell[0].text.strip() if name_cell else "N/A"
+                        if name != "N/A" and name not in self.category_data:
+                            self.category_data.append(name)
+                        
+                        if i <= 5:  # Show first 5 results
+                            slug_cell = row.find_elements(*self.CELL_SLUG)
+                            role_cell = row.find_elements(*self.CELL_ROLE)
+                            slug = slug_cell[0].text.strip() if slug_cell else "N/A"
+                            role = role_cell[0].text.strip() if role_cell else "N/A"
+                            print(f"  {i}. Name: {name}, Slug: {slug}, Role: {role}")
+                    except Exception as e:
+                        print(f"  {i}. [Unable to read row data]")
+            else:
+                print("❌ No results found - search returned empty")
+        except Exception as e:
+            print(f"❌ No results found - search term not matched")
+
+    def search_brand_box(self, search_value):
+        """Perform brand search and print results"""
+        print(f"🔍 Searching for '{search_value}' in brands...")
+        print(f"📝 Search term entered: '{search_value}'")
+        try:
+            search_input = self.wait.until(
+                EC.element_to_be_clickable(self.SEARCH_BRAND_INPUT)
+            )
+            search_input.clear()
+            search_input.send_keys(search_value)
+            
+            import time
+            time.sleep(2)
+            
+            self.read_brand_table()
+            
+            # Clear search box using backspace keys
+            search_input.send_keys(Keys.CONTROL + "a")
+            search_input.send_keys(Keys.BACKSPACE)
+            time.sleep(2)
+            
+            # Collect all data after clearing search
+            self.collect_all_brand_data()
+                
+            return True
+        except Exception as e:
+            print(f"❌ Error performing brand search: {e}")
             return False
 
     def read_brand_table(self):
@@ -173,6 +282,9 @@ class AdminProductManagementPage:
                         name = name_cell[0].text.strip() if name_cell else "N/A"
                         slug = slug_cell[0].text.strip() if slug_cell else "N/A"
                         
+                        if name != "N/A" and name not in self.brand_data:
+                            self.brand_data.append(name)
+                        
                         print(f"  {i}. Name: {name}, Slug: {slug}")
                     except Exception as e:
                         print(f"  {i}. [Unable to read row data]")
@@ -181,13 +293,13 @@ class AdminProductManagementPage:
         except Exception as e:
             print(f"❌ No results found - search term not matched")
 
-    def search_brand_box(self, search_value):
-        """Perform brand search and print results"""
-        print(f"🔍 Searching for '{search_value}' in brands...")
+    def search_product_box(self, search_value):
+        """Perform product search and print results"""
+        print(f"🔍 Searching for '{search_value}' in products...")
         print(f"📝 Search term entered: '{search_value}'")
         try:
             search_input = self.wait.until(
-                EC.element_to_be_clickable(self.SEARCH_BRAND_INPUT)
+                EC.element_to_be_clickable(self.SEARCH_PRODUCT_INPUT)
             )
             search_input.clear()
             search_input.send_keys(search_value)
@@ -195,11 +307,19 @@ class AdminProductManagementPage:
             import time
             time.sleep(2)
             
-            self.read_brand_table()
+            self.read_product_table()
+            
+            # Clear search box using backspace keys
+            search_input.send_keys(Keys.CONTROL + "a")
+            search_input.send_keys(Keys.BACKSPACE)
+            time.sleep(2)
+            
+            # Collect all data after clearing search
+            self.collect_all_product_data()
                 
             return True
         except Exception as e:
-            print(f"❌ Error performing brand search: {e}")
+            print(f"❌ Error performing product search: {e}")
             return False
 
     def read_product_table(self):
@@ -232,6 +352,9 @@ class AdminProductManagementPage:
                         price = price_cell[0].text.strip() if price_cell else "N/A"
                         rating = rating_cell[0].text.strip() if rating_cell else "N/A"
                         
+                        if name != "N/A" and name not in self.product_data:
+                            self.product_data.append(name)
+                        
                         print(f"  {i}. Name: {name}, Slug: {slug}, Price: {price}, Rating: {rating}")
                     except Exception as e:
                         print(f"  {i}. [Unable to read row data]")
@@ -240,44 +363,13 @@ class AdminProductManagementPage:
         except Exception as e:
             print(f"❌ No results found - search term not matched")
 
-    def search_product_box(self, search_value):
-        """Perform product search and print results"""
-        print(f"🔍 Searching for '{search_value}' in products...")
-        try:
-            search_input = self.wait.until(
-                EC.element_to_be_clickable(self.SEARCH_PRODUCT_INPUT)
-            )
-            search_input.clear()
-            search_input.send_keys(search_value)
-            
-            import time
-            time.sleep(2)
-            
-            self.read_product_table()
-                
-            return True
-        except Exception as e:
-            print(f"❌ Error performing product search: {e}")
-            return False
-
-    def search_test_category(self):
-        """Search for 'test category' in categories"""
-        return self.search_box(self.SEARCH_CATEGORY_INPUT, "test category")
-        
-    def search_test_brand(self):
-        """Search for 'test brand' in brands"""
-        return self.search_brand_box("test brand")
-        
-    def search_test_product(self):
-        """Search for 'test product' in products"""
-        return self.search_product_box("test product")
-    def search_product_box(self, search_value):
-        """Perform product search and print results"""
-        print(f"🔍 Searching for '{search_value}' in products...")
+    def search_variant_box(self, search_value):
+        """Perform product variants search and print results"""
+        print(f"🔍 Searching for '{search_value}' in product variants...")
         print(f"📝 Search term entered: '{search_value}'")
         try:
             search_input = self.wait.until(
-                EC.element_to_be_clickable(self.SEARCH_PRODUCT_INPUT)
+                EC.element_to_be_clickable(self.SEARCH_VARIANT_INPUT)
             )
             search_input.clear()
             search_input.send_keys(search_value)
@@ -285,11 +377,19 @@ class AdminProductManagementPage:
             import time
             time.sleep(2)
             
-            self.read_product_table()
+            self.read_variant_table()
+            
+            # Clear search box using backspace keys
+            search_input.send_keys(Keys.CONTROL + "a")
+            search_input.send_keys(Keys.BACKSPACE)
+            time.sleep(2)
+            
+            # Collect all data after clearing search
+            self.collect_all_variant_data()
                 
             return True
         except Exception as e:
-            print(f"❌ Error performing product search: {e}")
+            print(f"❌ Error performing variant search: {e}")
             return False
 
     def read_variant_table(self):
@@ -326,6 +426,9 @@ class AdminProductManagementPage:
                         discount = discount_cell[0].text.strip() if discount_cell else "N/A"
                         min_qty = min_qty_cell[0].text.strip() if min_qty_cell else "N/A"
                         
+                        if name != "N/A" and name not in self.variant_data:
+                            self.variant_data.append(name)
+                        
                         print(f"  {i}. Variant: {name}, Product: {product}, Price: {price}, Stock: {stock}, Discount: {discount}%, Min Qty: {min_qty}")
                     except Exception as e:
                         print(f"  {i}. [Unable to read row data]")
@@ -334,13 +437,13 @@ class AdminProductManagementPage:
         except Exception as e:
             print(f"❌ No results found - search term not matched")
 
-    def search_variant_box(self, search_value):
-        """Perform product variants search and print results"""
-        print(f"🔍 Searching for '{search_value}' in product variants...")
+    def search_attribute_box(self, search_value):
+        """Perform attribute values search and print results"""
+        print(f"🔍 Searching for '{search_value}' in attribute values...")
         print(f"📝 Search term entered: '{search_value}'")
         try:
             search_input = self.wait.until(
-                EC.element_to_be_clickable(self.SEARCH_VARIANT_INPUT)
+                EC.element_to_be_clickable(self.SEARCH_ATTRIBUTE_INPUT)
             )
             search_input.clear()
             search_input.send_keys(search_value)
@@ -348,16 +451,21 @@ class AdminProductManagementPage:
             import time
             time.sleep(2)
             
-            self.read_variant_table()
+            self.read_attribute_table()
+            
+            # Clear search box using backspace keys
+            search_input.send_keys(Keys.CONTROL + "a")
+            search_input.send_keys(Keys.BACKSPACE)
+            time.sleep(2)
+            
+            # Collect all data after clearing search
+            self.collect_all_attribute_data()
                 
             return True
         except Exception as e:
-            print(f"❌ Error performing variant search: {e}")
+            print(f"❌ Error performing attribute search: {e}")
             return False
 
-    def search_test_variant(self):
-        """Search for 'test variant' in product variants"""
-        return self.search_variant_box("test variant")
     def read_attribute_table(self):
         """Read and print attribute values table results"""
         try:
@@ -384,6 +492,9 @@ class AdminProductManagementPage:
                         attribute = attribute_cell[0].text.strip() if attribute_cell else "N/A"
                         value = value_cell[0].text.strip() if value_cell else "N/A"
                         
+                        if attribute != "N/A" and attribute not in self.attribute_data:
+                            self.attribute_data.append(attribute)
+                        
                         print(f"  {i}. Attribute: {attribute}, Value: {value}")
                     except Exception as e:
                         print(f"  {i}. [Unable to read row data]")
@@ -392,27 +503,114 @@ class AdminProductManagementPage:
         except Exception as e:
             print(f"❌ No results found - search term not matched")
 
-    def search_attribute_box(self, search_value):
-        """Perform attribute values search and print results"""
-        print(f"🔍 Searching for '{search_value}' in attribute values...")
-        print(f"📝 Search term entered: '{search_value}'")
-        try:
-            search_input = self.wait.until(
-                EC.element_to_be_clickable(self.SEARCH_ATTRIBUTE_INPUT)
-            )
-            search_input.clear()
-            search_input.send_keys(search_value)
-            
-            import time
-            time.sleep(2)
-            
-            self.read_attribute_table()
-                
-            return True
-        except Exception as e:
-            print(f"❌ Error performing attribute search: {e}")
-            return False
+    def search_test_category(self):
+        """Search for 'test category' in categories"""
+        return self.search_box(self.SEARCH_CATEGORY_INPUT, "test category")
+        
+    def search_test_brand(self):
+        """Search for 'test brand' in brands"""
+        return self.search_brand_box("test brand")
+        
+    def search_test_product(self):
+        """Search for 'test product' in products"""
+        return self.search_product_box("test product")
+
+    def search_test_variant(self):
+        """Search for 'test variant' in product variants"""
+        return self.search_variant_box("test variant")
 
     def search_test_attribute(self):
         """Search for 'test attribute' in attribute values"""
         return self.search_attribute_box("test attribute")
+
+    def collect_all_category_data(self):
+        """Collect all category names after search is cleared"""
+        try:
+            category_container = self.driver.find_element(*self.CATEGORY_CONTAINER)
+            table_body = category_container.find_elements(*self.CATEGORY_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                for row in table_rows:
+                    name_cell = row.find_elements(*self.CELL_NAME)
+                    if name_cell:
+                        name = name_cell[0].text.strip()
+                        if name and name != "N/A" and name not in self.category_data:
+                            self.category_data.append(name)
+        except:
+            pass
+
+    def collect_all_brand_data(self):
+        """Collect all brand names after search is cleared"""
+        try:
+            brand_container = self.driver.find_element(*self.BRAND_CONTAINER)
+            table_body = brand_container.find_elements(*self.BRAND_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                for row in table_rows:
+                    name_cell = row.find_elements(*self.BRAND_CELL_NAME)
+                    if name_cell:
+                        name = name_cell[0].text.strip()
+                        if name and name != "N/A" and name not in self.brand_data:
+                            self.brand_data.append(name)
+        except:
+            pass
+
+    def collect_all_product_data(self):
+        """Collect all product names after search is cleared"""
+        try:
+            product_container = self.driver.find_element(*self.PRODUCT_CONTAINER)
+            table_body = product_container.find_elements(*self.PRODUCT_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                for row in table_rows:
+                    name_cell = row.find_elements(*self.PRODUCT_CELL_NAME)
+                    if name_cell:
+                        name = name_cell[0].text.strip()
+                        if name and name != "N/A" and name not in self.product_data:
+                            self.product_data.append(name)
+        except:
+            pass
+
+    def collect_all_variant_data(self):
+        """Collect all variant names after search is cleared"""
+        try:
+            variant_container = self.driver.find_element(*self.VARIANT_CONTAINER)
+            table_body = variant_container.find_elements(*self.VARIANT_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                for row in table_rows:
+                    name_cell = row.find_elements(*self.VARIANT_CELL_NAME)
+                    if name_cell:
+                        name = name_cell[0].text.strip()
+                        if name and name != "N/A" and name not in self.variant_data:
+                            self.variant_data.append(name)
+        except:
+            pass
+
+    def collect_all_attribute_data(self):
+        """Collect all attribute names after search is cleared"""
+        try:
+            attribute_container = self.driver.find_element(*self.ATTRIBUTE_CONTAINER)
+            table_body = attribute_container.find_elements(*self.ATTRIBUTE_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                for row in table_rows:
+                    attribute_cell = row.find_elements(*self.ATTRIBUTE_CELL_ATTRIBUTE)
+                    if attribute_cell:
+                        attribute = attribute_cell[0].text.strip()
+                        if attribute and attribute != "N/A" and attribute not in self.attribute_data:
+                            self.attribute_data.append(attribute)
+        except:
+            pass
+
+    def print_all_table_data(self):
+        """Print summary of all table data collected"""
+        print("\n" + "="*50)
+        print("📊 SUMMARY OF ALL TABLE DATA")
+        print("="*50)
+        print(f"📁 Categories table has {len(self.category_data)} items")
+        print(f"🏷️ Brands table has {len(self.brand_data)} items")
+        print(f"📦 Products table has {len(self.product_data)} items")
+        print(f"🔧 Variants table has {len(self.variant_data)} items")
+        print(f"⚙️ Attributes table has {len(self.attribute_data)} items")
+        print("="*50)

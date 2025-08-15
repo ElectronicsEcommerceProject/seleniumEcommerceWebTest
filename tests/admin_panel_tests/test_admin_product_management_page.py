@@ -42,6 +42,9 @@ def test_admin_product_management_page_verification(driver):
     
     assert product_management_page.verifying_productManagement(), "Product Management page verification failed"
     
+    # Collect table counts before making searches
+    product_management_page.collect_table_counts()
+    
     # Search for test category
     product_management_page.search_test_category()
     
@@ -56,3 +59,6 @@ def test_admin_product_management_page_verification(driver):
     
     # Search for test attribute
     product_management_page.search_test_attribute()
+    
+    # Print summary of all table data
+    product_management_page.print_all_table_data()
