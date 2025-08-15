@@ -62,3 +62,9 @@ def test_admin_product_management_page_verification(driver):
     
     # Print summary of all table data
     product_management_page.print_all_table_data()
+    
+    # Test category filter by clicking on a valid category
+    valid_categories = [cat for cat in product_management_page.category_data if cat != "No data available"]
+    if valid_categories:
+        first_category = valid_categories[0]
+        product_management_page.click_category_and_test_filter(first_category)

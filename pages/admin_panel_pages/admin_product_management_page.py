@@ -603,6 +603,113 @@ class AdminProductManagementPage:
         except:
             pass
 
+    def click_category_and_test_filter(self, category_name):
+        """Click on a category and test if filter is working"""
+        print(f"🔍 Clicking on category: {category_name}")
+        try:
+            # Store original counts
+            original_brands = len(self.brand_data)
+            original_products = len(self.product_data)
+            original_variants = len(self.variant_data)
+            original_attributes = len(self.attribute_data)
+            
+            # Click on category
+            category_container = self.driver.find_element(*self.CATEGORY_CONTAINER)
+            table_body = category_container.find_element(*self.CATEGORY_TABLE_BODY)
+            rows = table_body.find_elements(*self.TABLE_ROWS)
+            
+            clicked = False
+            for row in rows:
+                name_cell = row.find_elements(*self.CELL_NAME)
+                if name_cell:
+                    cell_text = name_cell[0].text.strip()
+                    if cell_text and category_name.lower() == cell_text.lower():
+                        self.driver.execute_script("arguments[0].click();", name_cell[0])
+                        clicked = True
+                        print(f"✅ Successfully clicked on category: {cell_text}")
+                        break
+            
+            if not clicked:
+                print(f"❌ Could not find category: {category_name}")
+                return False
+            
+            import time
+            time.sleep(3)  # Wait for filter to apply
+            
+            # Count filtered results
+            filtered_brands = self.count_filtered_brands()
+            filtered_products = self.count_filtered_products()
+            filtered_variants = self.count_filtered_variants()
+            filtered_attributes = self.count_filtered_attributes()
+            
+            print(f"📊 FILTER TEST RESULTS for {category_name}:")
+            print(f"🏷️ Brands: {original_brands} -> {filtered_brands}")
+            print(f"📦 Products: {original_products} -> {filtered_products}")
+            print(f"🔧 Variants: {original_variants} -> {filtered_variants}")
+            print(f"⚙️ Attributes: {original_attributes} -> {filtered_attributes}")
+            
+            # Test if filter is working
+            if (filtered_brands <= original_brands and 
+                filtered_products <= original_products and 
+                filtered_variants <= original_variants and 
+                filtered_attributes <= original_attributes):
+                print("✅ PASS: Category filter is working correctly")
+            else:
+                print("❌ FAIL: Category filter is not working")
+                
+            return True
+        except Exception as e:
+            print(f"❌ Error testing category filter: {e}")
+            return False
+    
+    def count_filtered_brands(self):
+        """Count brands after filter is applied"""
+        try:
+            brand_container = self.driver.find_element(*self.BRAND_CONTAINER)
+            table_body = brand_container.find_elements(*self.BRAND_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                return len(table_rows)
+        except:
+            pass
+        return 0
+    
+    def count_filtered_products(self):
+        """Count products after filter is applied"""
+        try:
+            product_container = self.driver.find_element(*self.PRODUCT_CONTAINER)
+            table_body = product_container.find_elements(*self.PRODUCT_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                return len(table_rows)
+        except:
+            pass
+        return 0
+    
+    def count_filtered_variants(self):
+        """Count variants after filter is applied"""
+        try:
+            variant_container = self.driver.find_element(*self.VARIANT_CONTAINER)
+            table_body = variant_container.find_elements(*self.VARIANT_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                return len(table_rows)
+        except:
+            pass
+        return 0
+    
+    def count_filtered_attributes(self):
+        """Count attributes after filter is applied"""
+        try:
+            attribute_container = self.driver.find_element(*self.ATTRIBUTE_CONTAINER)
+            table_body = attribute_container.find_elements(*self.ATTRIBUTE_TABLE_BODY)
+            if table_body:
+                table_rows = table_body[0].find_elements(*self.TABLE_ROWS)
+                return len(table_rows)
+        except:
+            pass
+        return 0
+
     def print_all_table_data(self):
         """Print summary of all table data collected"""
         print("\n" + "="*50)
