@@ -13,6 +13,7 @@ class AdminOrderManagementPage:
     PAGINATION_BUTTONS = (By.XPATH, "//div[contains(@class, 'flex-wrap')]//button")
     TOTAL_ORDERS_COUNT = (By.XPATH, "//p[@class='text-3xl font-bold text-blue-600']")
     PENDING_STATUS_SPANS = (By.XPATH, "//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']")
+    PENDING_ORDERS_COUNT = (By.XPATH, "//h3[text()='Pending Orders']/following-sibling::p[@class='text-3xl font-bold text-blue-600']")
     
     
     # ================= INIT =================
@@ -237,21 +238,24 @@ class AdminOrderManagementPage:
         else:
             print("No pending orders found.")
         print("="*80)
-    
-    def print_pending_orders(self, pending_orders):
-        """Print all pending orders in a formatted way"""
-        print("\n" + "="*80)
-        print("🟡 PENDING ORDERS SUMMARY")
-        print("="*80)
-        print(f"Total Pending Orders: {len(pending_orders)}")
-        print("="*80)
-        
-        if pending_orders:
-            for i, order in enumerate(pending_orders, 1):
-                print(f"{i:2d}. Order ID: {order['order_id']}")
-                print(f"    Customer: {order['customer_name']} ({order['customer_email']})")
-                print(f"    Amount: {order['total_amount']} | Date: {order['order_date']}")
-                print("-" * 60)
+
+    def get_pending_orders_count_from_dashboard(self):
+        """Gets the pending orders count from the dashboard header"""
+        try:
+            time.sleep(2)
+            pending_count_element = self.wait.until(
+                EC.presence_of_element_located(self.PENDING_ORDERS_COUNT)
+            )
+            return int(pending_count_element.text)
+        except Exception as e:
+            print(f"Error getting pending orders count from dashboard: {e}")
+            return 0
+
+    def compare_dashboard_and_actual_pending_counts(self, dashboard_count, actual_count):
+        """Compare dashboard pending count with actual pending orders found"""
+        if dashboard_count == actual_count:
+            print(f"✅ Pending orders match: Dashboard shows {dashboard_count} pending orders, Found {actual_count} pending orders")
+            return True
         else:
-            print("No pending orders found.")
-        print("="*80)
+            print(f"❌ Pending orders mismatch: Dashboard shows {dashboard_count} pending orders, Found {actual_count} pending orders")
+            return False

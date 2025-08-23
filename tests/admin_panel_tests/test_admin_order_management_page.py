@@ -60,3 +60,8 @@ def test_admin_order_management_page_verification(driver):
     # Get all pending orders across all pages
     pending_orders = order_management_page.get_pending_orders_with_pagination()
     print(f"\n📊 Found {len(pending_orders)} pending orders in total")
+    
+    # Get pending orders count from dashboard and compare
+    dashboard_pending_count = order_management_page.get_pending_orders_count_from_dashboard()
+    print(f"Dashboard pending count: {dashboard_pending_count}")
+    order_management_page.compare_dashboard_and_actual_pending_counts(dashboard_pending_count, len(pending_orders))
