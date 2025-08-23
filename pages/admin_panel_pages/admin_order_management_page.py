@@ -14,6 +14,18 @@ class AdminOrderManagementPage:
     TOTAL_ORDERS_COUNT = (By.XPATH, "//p[@class='text-3xl font-bold text-blue-600']")
     PENDING_STATUS_SPANS = (By.XPATH, "//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']")
     PENDING_ORDERS_COUNT = (By.XPATH, "//h3[text()='Pending Orders']/following-sibling::p[@class='text-3xl font-bold text-blue-600']")
+    SHIPPED_ORDERS_COUNT = (By.XPATH, "//h3[text()='Shipped Orders']/following-sibling::p[@class='text-3xl font-bold text-blue-600']")
+    
+    # Order details XPaths (relative to row)
+    ORDER_ID_BUTTON = ".//td[1]//button"
+    CUSTOMER_NAME = ".//td[2]//div[1]"
+    CUSTOMER_EMAIL = ".//td[2]//div[2]"
+    ORDER_TOTAL_AMOUNT = ".//td[4]"
+    ORDER_DATE = ".//td[5]"
+    
+    # Status XPaths (relative to row)
+    PENDING_STATUS = ".//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']"
+    SHIPPED_STATUS = ".//span[contains(@class, 'bg-blue-100') and contains(@class, 'text-blue-800') and text()='shipped']"
     
     
     # ================= INIT =================
@@ -158,15 +170,15 @@ class AdminOrderManagementPage:
                 for row in order_rows:
                     try:
                         # Check if this row has pending status
-                        pending_span = row.find_element(By.XPATH, ".//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']")
+                        pending_span = row.find_element(By.XPATH, self.PENDING_STATUS)
                         
                         if pending_span:
                             # Extract order details
-                            order_id = row.find_element(By.XPATH, ".//td[1]//button").text
-                            customer_name = row.find_element(By.XPATH, ".//td[2]//div[1]").text
-                            customer_email = row.find_element(By.XPATH, ".//td[2]//div[2]").text
-                            total_amount = row.find_element(By.XPATH, ".//td[4]").text
-                            order_date = row.find_element(By.XPATH, ".//td[5]").text
+                            order_id = row.find_element(By.XPATH, self.ORDER_ID_BUTTON).text
+                            customer_name = row.find_element(By.XPATH, self.CUSTOMER_NAME).text
+                            customer_email = row.find_element(By.XPATH, self.CUSTOMER_EMAIL).text
+                            total_amount = row.find_element(By.XPATH, self.ORDER_TOTAL_AMOUNT).text
+                            order_date = row.find_element(By.XPATH, self.ORDER_DATE).text
                             
                             pending_orders.append({
                                 'order_id': order_id,
@@ -258,4 +270,102 @@ class AdminOrderManagementPage:
             return True
         else:
             print(f"❌ Pending orders mismatch: Dashboard shows {dashboard_count} pending orders, Found {actual_count} pending orders")
+            return False
+
+    def get_shipped_orders_with_pagination(self):
+        """Collect all shipped orders across all pages with pagination"""
+        shipped_orders = []
+        page_number = 1
+        
+        while True:
+            print(f"🚚 Checking shipped orders on page {page_number}...")
+            page_shipped_count = 0
+            
+            try:
+                order_rows = self.wait.until(
+                    EC.presence_of_all_elements_located(self.ORDER_ROWS)
+                )
+                
+                for row in order_rows:
+                    try:
+                        # Check if this row has shipped status
+                        shipped_span = row.find_element(By.XPATH, self.SHIPPED_STATUS)
+                        
+                        if shipped_span:
+                            order_id = row.find_element(By.XPATH, self.ORDER_ID_BUTTON).text
+                            customer_name = row.find_element(By.XPATH, self.CUSTOMER_NAME).text
+                            customer_email = row.find_element(By.XPATH, self.CUSTOMER_EMAIL).text
+                            total_amount = row.find_element(By.XPATH, self.ORDER_TOTAL_AMOUNT).text
+                            order_date = row.find_element(By.XPATH, self.ORDER_DATE).text
+                            
+                            shipped_orders.append({
+                                'order_id': order_id,
+                                'customer_name': customer_name,
+                                'customer_email': customer_email,
+                                'total_amount': total_amount,
+                                'order_date': order_date,
+                                'status': 'shipped'
+                            })
+                            page_shipped_count += 1
+                    except Exception:
+                        continue
+                        
+                print(f"   🚚 Found {page_shipped_count} shipped orders on page {page_number}")
+                        
+            except Exception as e:
+                print(f"Error getting rows on page {page_number}: {e}")
+                break
+            
+            print(f"   Total shipped orders so far: {len(shipped_orders)}")
+            
+            # Navigate to next page
+            try:
+                pagination_buttons = self.wait.until(
+                    EC.presence_of_all_elements_located(self.PAGINATION_BUTTONS)
+                )
+                
+                next_button = None
+                for button in pagination_buttons:
+                    if button.text == str(page_number + 1):
+                        next_button = button
+                        break
+                
+                if next_button:
+                    time.sleep(2)
+                    try:
+                        next_button.click()
+                    except Exception:
+                        self.driver.execute_script("arguments[0].click();", next_button)
+                    
+                    page_number += 1
+                    self.wait.until(
+                        EC.presence_of_all_elements_located(self.ORDER_ROWS)
+                    )
+                else:
+                    break
+            except Exception:
+                break
+        
+        print(f"\n🚚 Total Shipped Orders Found: {len(shipped_orders)}")
+        return shipped_orders
+
+    def get_shipped_orders_count_from_dashboard(self):
+        """Gets the shipped orders count from the dashboard header"""
+        try:
+            time.sleep(2)
+            shipped_count_element = self.wait.until(
+                EC.presence_of_element_located(self.SHIPPED_ORDERS_COUNT)
+            )
+            return int(shipped_count_element.text)
+        except Exception as e:
+            print(f"Error getting shipped orders count from dashboard: {e}")
+            return 0
+
+    def compare_dashboard_and_actual_shipped_counts(self, dashboard_count, actual_count):
+        """Compare dashboard shipped count with actual shipped orders found"""
+        if dashboard_count == actual_count:
+            print(f"✅ Shipped orders match: Dashboard shows {dashboard_count} shipped orders, Found {actual_count} shipped orders")
+            return True
+        else:
+            print(f"❌ Shipped orders mismatch: Dashboard shows {dashboard_count} shipped orders, Found {actual_count} shipped orders")
             return False

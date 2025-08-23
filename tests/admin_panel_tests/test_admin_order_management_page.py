@@ -65,3 +65,12 @@ def test_admin_order_management_page_verification(driver):
     dashboard_pending_count = order_management_page.get_pending_orders_count_from_dashboard()
     print(f"Dashboard pending count: {dashboard_pending_count}")
     order_management_page.compare_dashboard_and_actual_pending_counts(dashboard_pending_count, len(pending_orders))
+    
+    # Get all shipped orders across all pages
+    shipped_orders = order_management_page.get_shipped_orders_with_pagination()
+    print(f"\n📊 Found {len(shipped_orders)} shipped orders in total")
+    
+    # Get shipped orders count from dashboard and compare
+    dashboard_shipped_count = order_management_page.get_shipped_orders_count_from_dashboard()
+    print(f"Dashboard shipped count: {dashboard_shipped_count}")
+    order_management_page.compare_dashboard_and_actual_shipped_counts(dashboard_shipped_count, len(shipped_orders))
