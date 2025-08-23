@@ -8,19 +8,8 @@ from selenium.webdriver.support.ui import Select
 class AdminOrderManagementPage:
     # ================= LOCATORS =================
     ORDER_MANAGEMENT_LINK = (By.XPATH, "//span[normalize-space()='Order Management']")
-    ORDER_MANAGEMENT_TITLE = (By.XPATH, "//h1[normalize-space()='Order Management']")
-    RESET_FILTERS_BUTTON = (By.XPATH, "//button[contains(@class, 'bg-gray-200') and contains(text(), 'Reset Filters')]")
-    EDIT_BUTTON = (By.XPATH, "//button[@aria-label='Edit orders']")
-    SEARCH_ORDER_INPUT = (By.XPATH, "//input[@placeholder='Search orders...']")
-    ORDER_CONTAINER = (By.XPATH, "//h2[text()='Orders']/ancestor::div[contains(@class, 'bg-white rounded-xl')]")
-    ORDER_TABLE_BODY = (By.XPATH, ".//tbody[@class='divide-y divide-gray-100']")
-    TABLE_ROWS = (By.XPATH, ".//tr")
-    NO_RESULTS_MESSAGE = (By.XPATH, ".//*[contains(text(), 'No') and contains(text(), 'found')]")
-    ORDER_CELL_ID = (By.XPATH, ".//td[1]//div")
-    ORDER_CELL_CUSTOMER = (By.XPATH, ".//td[2]//div")
-    ORDER_CELL_STATUS = (By.XPATH, ".//td[3]//div")
-    ORDER_CELL_TOTAL = (By.XPATH, ".//td[4]//div")
-    ORDER_CELL_DATE = (By.XPATH, ".//td[5]//div")
+    ORDER_MANAGEMENT_TITLE = (By.XPATH, "(//th[normalize-space()='Order ID'])[1]")
+    
     
     # ================= INIT =================
     def __init__(self, driver):
