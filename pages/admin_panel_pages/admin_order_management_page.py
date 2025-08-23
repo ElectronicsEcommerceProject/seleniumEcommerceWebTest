@@ -9,6 +9,7 @@ class AdminOrderManagementPage:
     # ================= LOCATORS =================
     ORDER_MANAGEMENT_LINK = (By.XPATH, "//span[normalize-space()='Order Management']")
     ORDER_MANAGEMENT_TITLE = (By.XPATH, "(//th[normalize-space()='Order ID'])[1]")
+    ORDER_ROWS = (By.XPATH, "//tbody/tr")
     
     
     # ================= INIT =================
@@ -50,7 +51,18 @@ class AdminOrderManagementPage:
             print("❌ Error verifying Order management page:", e)
             return False
 
+    def count_order_items(self):
+        """Counts the number of order items"""
+        try:
+            order_rows = self.wait.until(
+                EC.presence_of_all_elements_located(self.ORDER_ROWS)
+            )
+            return len(order_rows)
+        except Exception as e:
+            print("Error counting order items:", e)
+            return 0
 
+    def print_summary(self):
         """Print summary of all table data collected"""
         print("\n" + "="*50)
         print("📊 SUMMARY OF ALL TABLE DATA")

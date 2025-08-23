@@ -42,4 +42,7 @@ def test_admin_order_management_page_verification(driver):
     
     assert order_management_page.verifying_orderManagement(), "Order Management page verification failed"
     
-   
+    # Count order items
+    item_count = order_management_page.count_order_items()
+    print(f"Found {item_count} order items.")
+    assert item_count == 10, f"Expected 10 order items, but found {item_count}"
