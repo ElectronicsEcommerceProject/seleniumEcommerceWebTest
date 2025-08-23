@@ -82,3 +82,10 @@ def test_admin_order_management_page_verification(driver):
     # Get all returned orders across all pages
     returned_orders = order_management_page.get_returned_orders_with_pagination()
     print(f"\n📊 Found {len(returned_orders)} returned orders in total")
+    
+    # Get cancelled/returned count from dashboard and compare
+    dashboard_cancelled_returned_count = order_management_page.get_cancelled_returned_count_from_dashboard()
+    print(f"Dashboard cancelled/returned count: {dashboard_cancelled_returned_count}")
+    order_management_page.compare_dashboard_and_actual_cancelled_returned_counts(
+        dashboard_cancelled_returned_count, len(cancelled_orders), len(returned_orders)
+    )

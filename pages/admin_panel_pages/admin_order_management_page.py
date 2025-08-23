@@ -15,6 +15,7 @@ class AdminOrderManagementPage:
     PENDING_STATUS_SPANS = (By.XPATH, "//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']")
     PENDING_ORDERS_COUNT = (By.XPATH, "//h3[text()='Pending Orders']/following-sibling::p[@class='text-3xl font-bold text-blue-600']")
     SHIPPED_ORDERS_COUNT = (By.XPATH, "//h3[text()='Shipped Orders']/following-sibling::p[@class='text-3xl font-bold text-blue-600']")
+    CANCELLED_RETURNED_COUNT = (By.XPATH, "//h3[text()='Cancelled/Returned']/following-sibling::p[@class='text-3xl font-bold text-blue-600']")
     
     # Order details XPaths (relative to row)
     ORDER_ID_BUTTON = ".//td[1]//button"
@@ -26,8 +27,8 @@ class AdminOrderManagementPage:
     # Status XPaths (relative to row)
     PENDING_STATUS = ".//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']"
     SHIPPED_STATUS = ".//span[contains(@class, 'bg-blue-100') and contains(@class, 'text-blue-800') and text()='shipped']"
-    CANCELLED_STATUS = ".//span[text()='cancelled']"
-    RETURNED_STATUS = ".//span[text()='returned']"
+    CANCELLED_STATUS = ".//td[3]//span[text()='cancelled']"
+    RETURNED_STATUS = ".//td[3]//span[text()='returned']"
     
     
     # ================= INIT =================
@@ -367,6 +368,7 @@ class AdminOrderManagementPage:
                 
                 for row in order_rows:
                     try:
+                        # Check status column (3rd column) for cancelled status
                         cancelled_span = row.find_element(By.XPATH, self.CANCELLED_STATUS)
                         
                         if cancelled_span:
@@ -443,6 +445,7 @@ class AdminOrderManagementPage:
                 
                 for row in order_rows:
                     try:
+                        # Check status column (3rd column) for returned status
                         returned_span = row.find_element(By.XPATH, self.RETURNED_STATUS)
                         
                         if returned_span:
@@ -502,6 +505,28 @@ class AdminOrderManagementPage:
         
         print(f"\n↩️ Total Returned Orders Found: {len(returned_orders)}")
         return returned_orders
+
+    def get_cancelled_returned_count_from_dashboard(self):
+        """Gets the cancelled/returned orders count from the dashboard header"""
+        try:
+            time.sleep(2)
+            cancelled_returned_element = self.wait.until(
+                EC.presence_of_element_located(self.CANCELLED_RETURNED_COUNT)
+            )
+            return int(cancelled_returned_element.text)
+        except Exception as e:
+            print(f"Error getting cancelled/returned orders count from dashboard: {e}")
+            return 0
+
+    def compare_dashboard_and_actual_cancelled_returned_counts(self, dashboard_count, cancelled_count, returned_count):
+        """Compare dashboard cancelled/returned count with actual cancelled and returned orders found"""
+        total_actual = cancelled_count + returned_count
+        if dashboard_count == total_actual:
+            print(f"✅ Cancelled/Returned orders match: Dashboard shows {dashboard_count}, Found {cancelled_count} cancelled + {returned_count} returned = {total_actual} total")
+            return True
+        else:
+            print(f"❌ Cancelled/Returned orders mismatch: Dashboard shows {dashboard_count}, Found {cancelled_count} cancelled + {returned_count} returned = {total_actual} total")
+            return False
 
     def get_shipped_orders_count_from_dashboard(self):
         """Gets the shipped orders count from the dashboard header"""
