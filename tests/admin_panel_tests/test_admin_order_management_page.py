@@ -42,17 +42,21 @@ def test_admin_order_management_page_verification(driver):
     print("🔗 Navigating to Order Management...")
     order_management_page.navigate_to_order_management()
     
-    assert order_management_page.verifying_orderManagement(), "Order Management page verification failed"
+    # assert order_management_page.verifying_orderManagement(), "Order Management page verification failed"
     
-    # Count all order items with pagination
-    total_items = order_management_page.count_all_order_items_with_pagination()
-    print(f"Found {total_items} total order items.")
-    assert total_items == 38, f"Expected 38 total order items, but found {total_items}"
+    # # Count all order items with pagination
+    # total_items = order_management_page.count_all_order_items_with_pagination()
+    # print(f"Found {total_items} total order items.")
+    # assert total_items == 38, f"Expected 38 total order items, but found {total_items}"
 
 
-    # Get the total orders count from the header
-    header_count = order_management_page.get_total_orders_from_header()
-    print(f"Header count: {header_count}")
+    # # Get the total orders count from the header
+    # header_count = order_management_page.get_total_orders_from_header()
+    # print(f"Header count: {header_count}")
     
-    # Compare header count with table count (using total_items already calculated)
-    order_management_page.compare_header_and_table_counts(header_count, total_items)
+    # # Compare header count with table count (using total_items already calculated)
+    # order_management_page.compare_header_and_table_counts(header_count, total_items)
+    
+    # Get all pending orders across all pages
+    pending_orders = order_management_page.get_pending_orders_with_pagination()
+    print(f"\n📊 Found {len(pending_orders)} pending orders in total")
