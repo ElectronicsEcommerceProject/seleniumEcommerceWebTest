@@ -26,6 +26,8 @@ class AdminOrderManagementPage:
     # Status XPaths (relative to row)
     PENDING_STATUS = ".//span[contains(@class, 'bg-yellow-100') and contains(@class, 'text-yellow-800') and text()='pending']"
     SHIPPED_STATUS = ".//span[contains(@class, 'bg-blue-100') and contains(@class, 'text-blue-800') and text()='shipped']"
+    CANCELLED_STATUS = ".//span[text()='cancelled']"
+    RETURNED_STATUS = ".//span[text()='returned']"
     
     
     # ================= INIT =================
@@ -348,6 +350,158 @@ class AdminOrderManagementPage:
         
         print(f"\n🚚 Total Shipped Orders Found: {len(shipped_orders)}")
         return shipped_orders
+
+    def get_cancelled_orders_with_pagination(self):
+        """Collect all cancelled orders across all pages with pagination"""
+        cancelled_orders = []
+        page_number = 1
+        
+        while True:
+            print(f"❌ Checking cancelled orders on page {page_number}...")
+            page_cancelled_count = 0
+            
+            try:
+                order_rows = self.wait.until(
+                    EC.presence_of_all_elements_located(self.ORDER_ROWS)
+                )
+                
+                for row in order_rows:
+                    try:
+                        cancelled_span = row.find_element(By.XPATH, self.CANCELLED_STATUS)
+                        
+                        if cancelled_span:
+                            order_id = row.find_element(By.XPATH, self.ORDER_ID_BUTTON).text
+                            customer_name = row.find_element(By.XPATH, self.CUSTOMER_NAME).text
+                            customer_email = row.find_element(By.XPATH, self.CUSTOMER_EMAIL).text
+                            total_amount = row.find_element(By.XPATH, self.ORDER_TOTAL_AMOUNT).text
+                            order_date = row.find_element(By.XPATH, self.ORDER_DATE).text
+                            
+                            cancelled_orders.append({
+                                'order_id': order_id,
+                                'customer_name': customer_name,
+                                'customer_email': customer_email,
+                                'total_amount': total_amount,
+                                'order_date': order_date,
+                                'status': 'cancelled'
+                            })
+                            page_cancelled_count += 1
+                    except Exception:
+                        continue
+                        
+                print(f"   ❌ Found {page_cancelled_count} cancelled orders on page {page_number}")
+                        
+            except Exception as e:
+                print(f"Error getting rows on page {page_number}: {e}")
+                break
+            
+            print(f"   Total cancelled orders so far: {len(cancelled_orders)}")
+            
+            # Navigate to next page
+            try:
+                pagination_buttons = self.wait.until(
+                    EC.presence_of_all_elements_located(self.PAGINATION_BUTTONS)
+                )
+                
+                next_button = None
+                for button in pagination_buttons:
+                    if button.text == str(page_number + 1):
+                        next_button = button
+                        break
+                
+                if next_button:
+                    time.sleep(2)
+                    try:
+                        next_button.click()
+                    except Exception:
+                        self.driver.execute_script("arguments[0].click();", next_button)
+                    
+                    page_number += 1
+                    self.wait.until(
+                        EC.presence_of_all_elements_located(self.ORDER_ROWS)
+                    )
+                else:
+                    break
+            except Exception:
+                break
+        
+        print(f"\n❌ Total Cancelled Orders Found: {len(cancelled_orders)}")
+        return cancelled_orders
+
+    def get_returned_orders_with_pagination(self):
+        """Collect all returned orders across all pages with pagination"""
+        returned_orders = []
+        page_number = 1
+        
+        while True:
+            print(f"↩️ Checking returned orders on page {page_number}...")
+            page_returned_count = 0
+            
+            try:
+                order_rows = self.wait.until(
+                    EC.presence_of_all_elements_located(self.ORDER_ROWS)
+                )
+                
+                for row in order_rows:
+                    try:
+                        returned_span = row.find_element(By.XPATH, self.RETURNED_STATUS)
+                        
+                        if returned_span:
+                            order_id = row.find_element(By.XPATH, self.ORDER_ID_BUTTON).text
+                            customer_name = row.find_element(By.XPATH, self.CUSTOMER_NAME).text
+                            customer_email = row.find_element(By.XPATH, self.CUSTOMER_EMAIL).text
+                            total_amount = row.find_element(By.XPATH, self.ORDER_TOTAL_AMOUNT).text
+                            order_date = row.find_element(By.XPATH, self.ORDER_DATE).text
+                            
+                            returned_orders.append({
+                                'order_id': order_id,
+                                'customer_name': customer_name,
+                                'customer_email': customer_email,
+                                'total_amount': total_amount,
+                                'order_date': order_date,
+                                'status': 'returned'
+                            })
+                            page_returned_count += 1
+                    except Exception:
+                        continue
+                        
+                print(f"   ↩️ Found {page_returned_count} returned orders on page {page_number}")
+                        
+            except Exception as e:
+                print(f"Error getting rows on page {page_number}: {e}")
+                break
+            
+            print(f"   Total returned orders so far: {len(returned_orders)}")
+            
+            # Navigate to next page
+            try:
+                pagination_buttons = self.wait.until(
+                    EC.presence_of_all_elements_located(self.PAGINATION_BUTTONS)
+                )
+                
+                next_button = None
+                for button in pagination_buttons:
+                    if button.text == str(page_number + 1):
+                        next_button = button
+                        break
+                
+                if next_button:
+                    time.sleep(2)
+                    try:
+                        next_button.click()
+                    except Exception:
+                        self.driver.execute_script("arguments[0].click();", next_button)
+                    
+                    page_number += 1
+                    self.wait.until(
+                        EC.presence_of_all_elements_located(self.ORDER_ROWS)
+                    )
+                else:
+                    break
+            except Exception:
+                break
+        
+        print(f"\n↩️ Total Returned Orders Found: {len(returned_orders)}")
+        return returned_orders
 
     def get_shipped_orders_count_from_dashboard(self):
         """Gets the shipped orders count from the dashboard header"""
