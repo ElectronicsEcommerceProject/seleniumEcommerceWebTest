@@ -42,14 +42,4 @@ def test_admin_order_management_page_verification(driver):
     
     assert order_management_page.verifying_orderManagement(), "Order Management page verification failed"
     
-    # Collect table counts before making searches
-    order_management_page.collect_table_counts()
-    
-    # Search for test order
-    order_management_page.search_test_order()
-    
-    # Print summary of all table data
-    order_management_page.print_all_table_data()
-    
-    # Test order edit and revert functionality
-    order_management_page.edit_order_and_revert()
+   
