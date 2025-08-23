@@ -11,6 +11,7 @@ class AdminOrderManagementPage:
     ORDER_MANAGEMENT_TITLE = (By.XPATH, "(//th[normalize-space()='Order ID'])[1]")
     ORDER_ROWS = (By.XPATH, "//tbody/tr")
     PAGINATION_BUTTONS = (By.XPATH, "//div[contains(@class, 'flex-wrap')]//button")
+    TOTAL_ORDERS_COUNT = (By.XPATH, "//p[@class='text-3xl font-bold text-blue-600']")
     
     
     # ================= INIT =================
@@ -112,3 +113,24 @@ class AdminOrderManagementPage:
         print("="*50)
         print(f"📦 Orders table has {len(self.order_data)} items")
         print("="*50)
+
+    def get_total_orders_from_header(self):
+        """Gets the total order count from the header."""
+        try:
+            time.sleep(5) # Wait for the count to be loaded
+            total_orders_element = self.wait.until(
+                EC.presence_of_element_located(self.TOTAL_ORDERS_COUNT)
+            )
+            return int(total_orders_element.text)
+        except Exception as e:
+            print(f"Error getting total orders from header: {e}")
+            return 0
+
+    def compare_header_and_table_counts(self, header_count, table_count):
+        """Compare header count with table count and print appropriate message"""
+        if header_count == table_count:
+            print(f"✅ Total orders match: Header shows {header_count} orders, Table shows {table_count} orders")
+            return True
+        else:
+            print(f"❌ Total orders mismatch: Header shows {header_count} orders, Table shows {table_count} orders")
+            return False

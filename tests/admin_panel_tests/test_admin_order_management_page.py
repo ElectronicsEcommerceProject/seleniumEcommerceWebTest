@@ -28,10 +28,12 @@ def test_admin_order_management_page_verification(driver):
     
     print("🌐 Opening admin page...")
     driver.get("https://maalaxmi.store/#/admin")
+    time.sleep(5)
     
     # Login first
     print("🔑 Opening sign-in modal...")
     login_page.open_sign_in_modal()
+    time.sleep(2)
     print("📝 Logging in...")
     login_page.login(os.getenv("ADMIN_EMAIL"), os.getenv("ADMIN_PASSWORD"))
     
@@ -46,3 +48,11 @@ def test_admin_order_management_page_verification(driver):
     total_items = order_management_page.count_all_order_items_with_pagination()
     print(f"Found {total_items} total order items.")
     assert total_items == 38, f"Expected 38 total order items, but found {total_items}"
+
+
+    # Get the total orders count from the header
+    header_count = order_management_page.get_total_orders_from_header()
+    print(f"Header count: {header_count}")
+    
+    # Compare header count with table count (using total_items already calculated)
+    order_management_page.compare_header_and_table_counts(header_count, total_items)
